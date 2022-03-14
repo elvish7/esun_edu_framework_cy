@@ -1,0 +1,142 @@
+/usr/local/lib/python3.8/dist-packages/numpy/lib/arraysetops.py:569: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
+  mask |= (ar1 == a)
+==========(1) Load Interaction ==========             
+Time cost: None            
+Memory cost: None            
+Interaction({                    
+	start date: None                    
+	end date: None                    
+	num users: 73189                     
+	num items: 2258                    
+	num interaction: 1954097                     
+	num interaction (aggregated): 196347                     
+	average subscribing times: 26.699326401508422                    
+	average regular-subscribing times: 24.97569306863053                    
+	average solo-subscribing times: 1.7236333328778914                    
+	average subscribed items: 2.6827392094440423                    
+	average regular-subscribed ratio: 0.5169345814824534                    
+	average solo-subscribed ratio: 0.4671715111268988                    
+	average mixed-subscribed ratio: 0.015893907390647794                    
+})             
+=======================
+Interaction({                    
+	start date: None                    
+	end date: None                    
+	num users: 35553                     
+	num items: 1695                    
+	num interaction: 96944                     
+	num interaction (aggregated): 66685                     
+	average subscribing times: 2.7267459848676623                    
+	average regular-subscribing times: 2.5983180041065452                    
+	average solo-subscribing times: 0.1284279807611172                    
+	average subscribed items: 1.8756504373751863                    
+	average regular-subscribed ratio: 0.9220547098700842                    
+	average solo-subscribed ratio: 0.0763653551435173                    
+	average mixed-subscribed ratio: 0.0015799349863985757                    
+})
+332 NA values in column gender_code are replaced by F
+42 NA values in column income_range_code are replaced by 1.0
+6 NA values in column risk_type_code are replaced by 03
+User({                
+	num_users: 73589                 
+	num_item_metas: 5                 
+	num_item_features: 15                 
+})
+Item({                
+	num_items: 4168                 
+	num_item_metas: 4                 
+	num_item_features: 26                 
+})
+Building interaction and user/item feature matrices ...
+
+Building matrices from 'interactions' data by key 'ratings'
+Building matrices from 'interactions' data by key 'ratings'
+RecDataset({                
+	split: ['train', 'eval'],                
+	num_users: 73589                 
+	num_items: 4168                
+	num_user_features: 15                
+	num_item_features: 26                
+})
+**** cold-start users and item in this dataset ****                 
+ - Number of non-interacted users: 867                 
+ - Number of non-interacted items: 1901
+[0 2 1 1 1 0 1 0 0 1]
+[0 0 0 0 0 1 0 0 0]
+DiffMatrix({                    
+	base: 65229                    
+	reference: 194882                    
+	intersection: 62403                    
+	same: 62403                    
+	difference: 2826                    
+})
+[0 1 1 1 1 0 1 0 0 1]
+[0 0 0 0 0 1 0 0 0]
+[0 1 0 0 0 0 0 0 0 0]
+[0 0 0 0 0 0 0 0 0]
+DiffMatrix({                    
+	base: 62403                    
+	reference: 97339                    
+	intersection: 59054                    
+	same: 59054                    
+	difference: 3349                    
+})
+[0 0 1 1 1 0 1 0 0 1]
+[0 0 0 0 0 1 0 0 0]
+[0 1 0 0 0 0 0 0 0 0]
+[0 0 0 0 0 0 0 0 0]
+Evaluation({                
+	evaluating sets: dict_keys(['eval', 'eval-exploit', 'eval-explore', 'eval-exploit-R2*', 'eval-exploit-S2*']),                
+})
+194881 interaction built...into 'temp/neworks.txt'.
+RecTrainer({                
+	model: SMORe                
+	model type:                 
+	model path: models/smore                
+	average_subscribing_times: None                
+})
+***** Epoch: 1 *****
+- cold-start users :879
+- cold-start items :1911
+[4167 4167 4167 4167 4167 4167 4167 4167 4167 4167]
+[4167 4167 4167 4167 4167 4167 4167 4167 4167]
+[4167 4166 4166 4166 4166 4167 4166 4167 4167 4166]
+[4167 4167 4167 4167 4167 4166 4167 4167 4167]
+[0 1 1 1 1 0 1 0 0 1]
+[0 0 0 0 0 1 0 0 0]
+[0 0 1 1 1 0 1 0 0 1]
+[0 0 0 0 0 1 0 0 0]
+[0 1 0 0 0 0 0 0 0 0]
+[0 0 0 0 0 0 0 0 0]
+==========================================
+ [eval                ]: 34535   (1.8888)
+ [eval-exploit        ]: 33355   (1.8709)
+ [eval-explore        ]: 2305    (1.2260)
+ [eval-exploit-R2*    ]: 31763   (1.8592)
+ [eval-exploit-S2*    ]: 2747    (1.2191)
+==========================================
+  mAP@5 on eval                : 0.4627
+  mAP@5 on eval-exploit        : 1.0000
+  mAP@5 on eval-explore        : 0.0057
+  mAP@5 on eval-exploit-R2*    : 1.0000
+  mAP@5 on eval-exploit-S2*    : 1.0000
+  mRR@5 on eval                : 0.4545
+  mRR@5 on eval-exploit        : 0.8578
+  mRR@5 on eval-explore        : 0.0057
+  mRR@5 on eval-exploit-R2*    : 0.8586
+  mRR@5 on eval-exploit-S2*    : 0.9548
+  precision@5 on eval                : 0.1340
+  precision@5 on eval-exploit        : 0.3523
+  precision@5 on eval-explore        : 0.0036
+  precision@5 on eval-exploit-R2*    : 0.3508
+  precision@5 on eval-exploit-S2*    : 0.2424
+  recall@5 on eval                : 0.5144
+  recall@5 on eval-exploit        : 1.0000
+  recall@5 on eval-explore        : 0.0147
+  recall@5 on eval-exploit-R2*    : 1.0000
+  recall@5 on eval-exploit-S2*    : 1.0000
+=================================
+
+Evaluation({                
+	evaluating sets: dict_keys(['eval', 'eval-exploit', 'eval-explore', 'eval-exploit-R2*', 'eval-exploit-S2*']),                
+})

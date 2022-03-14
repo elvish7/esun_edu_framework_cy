@@ -1,0 +1,9 @@
+Index(['bank_net_income_val', 'base_date', 'blfund_fee_twd',
+       'brh_net_income_val', 'cdsc_fee', 'chnl_fee_twd', 'credit_acct_amt',
+       'cust_id', 'data_seq', 'deduct_cnt', 'deduct_nhi_supp_val',
+       'deduct_proj_code', 'dta_src', 'eln_transfer_i_ccy',
+       'eln_transfer_o_prod_name', 'eln_transfer_o_unit', 'etl_dt',
+       'invest_ccy', 'invest_type_code', 'prod_ccy', 'purchase_no',
+       'rebat_income_val', 'txn_dt', 'wms_txn_amt_twd', 'wm_prod_code',
+       'wm_txn_code', 'wm_txn_trf_type'],
+      dtype='object')`

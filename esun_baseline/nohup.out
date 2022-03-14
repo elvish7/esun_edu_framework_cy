@@ -1,0 +1,74 @@
+WARNING:  the account will expire soon; please change your password
+DETAIL:  Your password will expire in 3.000000 days.
+HINT:  Use ALTER ROLE to change your password.
+read key file
+login as edu-cytsao
+packages in _define_operators: experiments.old_cust_baseline.dataloader.basic_edu.ops
+[Connect] rawdata_conn,nav_start_dt,nav_end_dt,txn_start_dt,txn_end_dt,txn_amt_end_dt=collect_inputs_for_dataloader(rawdata_conn=rawdata_conn,nav_start_dt=nav_start_dt,nav_end_dt=nav_end_dt,txn_start_dt=txn_start_dt,txn_end_dt=txn_end_dt,txn_amt_end_dt=txn_amt_end_dt)
+[Connect] w106=load_w106(rawdata_conn=rawdata_conn) [Result Dir] ['data/old_cust_baseline/dataloader/tmp/w106.feather']
+[Connect] w118=load_w118(nav_start_dt,nav_end_dt,rawdata_conn=rawdata_conn) [Result Dir] ['data/old_cust_baseline/dataloader/tmp/w118.feather']
+[Connect] w103=load_w103(txn_start_dt,txn_end_dt,rawdata_conn=rawdata_conn) [Result Dir] ['data/old_cust_baseline/dataloader/tmp/w103.feather']
+[Connect] cust_txn_amt=load_cust_txn_amt(txn_amt_end_dt,rawdata_conn) [Result Dir] ['data/old_cust_baseline/dataloader/tmp/cust_txn_amt.feather']
+packages in _define_operators: experiments.old_cust_baseline.preprocess_edu.ops
+[Connect] dig_start_dt,dig_end_dt=collect_inputs_for_preprocess(dig_start_dt=dig_start_dt,dig_end_dt=dig_end_dt)
+[Connect] cleaned_w106=fix_empty_string_on_column(w106,column='mkt_rbot_ctg_ic')
+[Connect] cleaned_w106=rename_column(cleaned_w106,columns={'wm_prod_code':'item_id'})
+[Connect] item_attr=extract_cat_attrs(cleaned_w106,id_name='item_id',attr_cols=['mkt_rbot_ctg_ic','prod_detail_type_code','prod_ccy','prod_risk_code'])
+[Connect] item_nav=encode_net_average_price(w118)
+[Connect] txn_dig=extract_dig_channel_purchase(w103,dig_start_dt,dig_end_dt) [Result Dir] ['data/old_cust_baseline/preprocess/tmp/txn_dig.feather']
+[Connect] item_ranking=extract_purchase_amount_rank(txn_dig,max_rank=50)
+[Connect] txn_matrix=obtain_user_item_matrix(w103,drop_duplicate=True)
+[Connect] item_feature=merge_fix_features(txn_matrix,item_attr,item_ranking,item_nav) [Result Dir] ['data/old_cust_baseline/preprocess/tmp/item_feature.feather']
+[Connect] cust_txn_rating=normalize_amt_by_cust(cust_txn_amt) [Result Dir] ['data/old_cust_baseline/preprocess/tmp/cust_txn_rating.feather']
+packages in _define_operators: ['experiments.old_cust_baseline.model.ops', 'experiments.old_cust_baseline.process_utils.mat_op']
+[Connect] item_matrix=calculate_similarity(item_feature)
+[Connect] cust_item_rating_matrix,user2nid,item2nid=matrix_mul_advance(cust_txn_rating,item_matrix)
+Traceback (most recent call last):
+  File "CF_baseline_output.py", line 39, in <module>
+    df = pd.DataFrame(scores)
+NameError: name 'scores' is not defined
+WARNING:  the account will expire soon; please change your password
+DETAIL:  Your password will expire in 3.000000 days.
+HINT:  Use ALTER ROLE to change your password.
+read key file
+login as edu-cytsao
+packages in _define_operators: experiments.old_cust_baseline.dataloader.basic_edu.ops
+[Connect] rawdata_conn,nav_start_dt,nav_end_dt,txn_start_dt,txn_end_dt,txn_amt_end_dt=collect_inputs_for_dataloader(rawdata_conn=rawdata_conn,nav_start_dt=nav_start_dt,nav_end_dt=nav_end_dt,txn_start_dt=txn_start_dt,txn_end_dt=txn_end_dt,txn_amt_end_dt=txn_amt_end_dt)
+[Connect] w106=load_w106(rawdata_conn=rawdata_conn) [Result Dir] ['data/old_cust_baseline/dataloader/tmp/w106.feather']
+[Connect] w118=load_w118(nav_start_dt,nav_end_dt,rawdata_conn=rawdata_conn) [Result Dir] ['data/old_cust_baseline/dataloader/tmp/w118.feather']
+[Connect] w103=load_w103(txn_start_dt,txn_end_dt,rawdata_conn=rawdata_conn) [Result Dir] ['data/old_cust_baseline/dataloader/tmp/w103.feather']
+[Connect] cust_txn_amt=load_cust_txn_amt(txn_amt_end_dt,rawdata_conn) [Result Dir] ['data/old_cust_baseline/dataloader/tmp/cust_txn_amt.feather']
+packages in _define_operators: experiments.old_cust_baseline.preprocess_edu.ops
+[Connect] dig_start_dt,dig_end_dt=collect_inputs_for_preprocess(dig_start_dt=dig_start_dt,dig_end_dt=dig_end_dt)
+[Connect] cleaned_w106=fix_empty_string_on_column(w106,column='mkt_rbot_ctg_ic')
+[Connect] cleaned_w106=rename_column(cleaned_w106,columns={'wm_prod_code':'item_id'})
+[Connect] item_attr=extract_cat_attrs(cleaned_w106,id_name='item_id',attr_cols=['mkt_rbot_ctg_ic','prod_detail_type_code','prod_ccy','prod_risk_code'])
+[Connect] item_nav=encode_net_average_price(w118)
+[Connect] txn_dig=extract_dig_channel_purchase(w103,dig_start_dt,dig_end_dt) [Result Dir] ['data/old_cust_baseline/preprocess/tmp/txn_dig.feather']
+[Connect] item_ranking=extract_purchase_amount_rank(txn_dig,max_rank=50)
+[Connect] txn_matrix=obtain_user_item_matrix(w103,drop_duplicate=True)
+[Connect] item_feature=merge_fix_features(txn_matrix,item_attr,item_ranking,item_nav) [Result Dir] ['data/old_cust_baseline/preprocess/tmp/item_feature.feather']
+[Connect] cust_txn_rating=normalize_amt_by_cust(cust_txn_amt) [Result Dir] ['data/old_cust_baseline/preprocess/tmp/cust_txn_rating.feather']
+packages in _define_operators: ['experiments.old_cust_baseline.model.ops', 'experiments.old_cust_baseline.process_utils.mat_op']
+[Connect] item_matrix=calculate_similarity(item_feature)
+[Connect] cust_item_rating_matrix,user2nid,item2nid=matrix_mul_advance(cust_txn_rating,item_matrix)
+Traceback (most recent call last):
+  File "/opt/conda/lib/python3.7/site-packages/pandas/io/formats/csvs.py", line 204, in save
+    self._save()
+  File "/opt/conda/lib/python3.7/site-packages/pandas/io/formats/csvs.py", line 323, in _save
+    self._save_chunk(start_i, end_i)
+  File "/opt/conda/lib/python3.7/site-packages/pandas/io/formats/csvs.py", line 354, in _save_chunk
+    libwriters.write_csv_rows(self.data, ix, self.nlevels, self.cols, self.writer)
+  File "pandas/_libs/writers.pyx", line 68, in pandas._libs.writers.write_csv_rows
+OSError: [Errno 28] No space left on device
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "CF_baseline_output.py", line 46, in <module>
+    df.to_csv(f"{today}_esun_cf.csv")
+  File "/opt/conda/lib/python3.7/site-packages/pandas/core/generic.py", line 3204, in to_csv
+    formatter.save()
+  File "/opt/conda/lib/python3.7/site-packages/pandas/io/formats/csvs.py", line 224, in save
+    f.close()
+OSError: [Errno 28] No space left on device

@@ -1,0 +1,8 @@
+w106 = load_w106(rawdata_conn=rawdata_conn)
+('w106.feather')
+w118 = load_w118(nav_start_dt, nav_end_dt, rawdata_conn=rawdata_conn)
+('w118.feather')
+w103 = load_w103(txn_start_dt, txn_end_dt, rawdata_conn=rawdata_conn)
+('w103.feather')
+cust_txn_amt = load_cust_txn_amt(txn_amt_end_dt, rawdata_conn)
+('cust_txn_amt.feather') 

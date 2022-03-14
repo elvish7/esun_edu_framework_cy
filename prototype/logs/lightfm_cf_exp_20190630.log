@@ -1,0 +1,519 @@
+==========(1) Load Interaction ==========             
+Time cost: None            
+Memory cost: None            
+Interaction({                    
+	start date: None                    
+	end date: None                    
+	num users: 70112                     
+	num items: 2307                    
+	num interaction: 1845464                     
+	num interaction (aggregated): 184438                     
+	average subscribing times: 26.321656777727064                    
+	average regular-subscribing times: 24.68815609310817                    
+	average solo-subscribing times: 1.6335006846188955                    
+	average subscribed items: 2.6306195801004106                    
+	average regular-subscribed ratio: 0.5323591979410071                    
+	average solo-subscribed ratio: 0.4521370562314664                    
+	average mixed-subscribed ratio: 0.015503745827526472                    
+})             
+=======================
+Interaction({                    
+	start date: None                    
+	end date: None                    
+	num users: 20191                     
+	num items: 1518                    
+	num interaction: 114571                     
+	num interaction (aggregated): 33480                     
+	average subscribing times: 5.674359863305433                    
+	average regular-subscribing times: 5.097518696448913                    
+	average solo-subscribing times: 0.5768411668565202                    
+	average subscribed items: 1.6581645287504334                    
+	average regular-subscribed ratio: 0.8535272629521891                    
+	average solo-subscribed ratio: 0.1456648570635652                    
+	average mixed-subscribed ratio: 0.0008078799842456916                    
+})
+311 NA values in column gender_code are replaced by F
+42 NA values in column income_range_code are replaced by 1.0
+8 NA values in column risk_type_code are replaced by 03
+User({                
+	num_users: 70547                 
+	num_item_metas: 5                 
+	num_item_features: 15                 
+})
+Item({                
+	num_items: 4168                 
+	num_item_metas: 4                 
+	num_item_features: 26                 
+})
+Building interaction and user/item feature matrices ...
+
+Building matrices from 'interactions' data by key 'ratings'
+Building matrices from 'interactions' data by key 'ratings'
+RecDataset({                
+	split: ['train', 'eval'],                
+	num_users: 70547                 
+	num_items: 4168                
+	num_user_features: 15                
+	num_item_features: 26                
+})
+**** cold-start users and item in this dataset ****                 
+ - Number of non-interacted users: 862                 
+ - Number of non-interacted items: 1790
+[0 0 0 1 1 1 0 2 0 1]
+[2 0 0 0 0 0 0 0 0]
+DiffMatrix({                    
+	base: 31934                    
+	reference: 183091                    
+	intersection: 27622                    
+	same: 27622                    
+	difference: 4312                    
+})
+[0 0 0 1 1 0 0 1 0 1]
+[1 0 0 0 0 0 0 0 0]
+[0 0 0 0 0 1 0 1 0 0]
+[1 0 0 0 0 0 0 0 0]
+DiffMatrix({                    
+	base: 27622                    
+	reference: 93378                    
+	intersection: 26257                    
+	same: 26257                    
+	difference: 1365                    
+})
+[0 0 0 1 1 0 0 0 0 1]
+[0 0 0 0 0 0 0 0 0]
+[0 0 0 0 0 0 0 1 0 0]
+[1 0 0 0 0 0 0 0 0]
+Evaluation({                
+	evaluating sets: dict_keys(['eval', 'eval-exploit', 'eval-explore', 'eval-exploit-R2*', 'eval-exploit-S2*']),                
+})
+RecTrainer({                
+	model: LightFM                
+	model type: cf                
+	model path: models/lightfm                
+	average_subscribing_times: None                
+})
+***** Epoch: 1 *****
+[4167 4167 4167 4167 4167 4167 4167 4167 4167 4167]
+[4167 4167 4167 4167 4167 4167 4167 4167 4167]
+[4167 4167 4167 4166 4166 4167 4167 4166 4167 4166]
+[4166 4167 4167 4167 4167 4167 4167 4167 4167]
+[0 0 0 1 1 0 0 1 0 1]
+[1 0 0 0 0 0 0 0 0]
+[0 0 0 1 1 0 0 0 0 1]
+[0 0 0 0 0 0 0 0 0]
+[0 0 0 0 0 0 0 1 0 0]
+[1 0 0 0 0 0 0 0 0]
+==========================================
+ [eval                ]: 19063   (1.6752)
+ [eval-exploit        ]: 16828   (1.6414)
+ [eval-explore        ]: 3363    (1.2822)
+ [eval-exploit-R2*    ]: 16090   (1.6319)
+ [eval-exploit-S2*    ]: 1176    (1.1607)
+==========================================
+  P@5   on eval                : 0.0490
+  P@5   on eval-exploit        : 0.3150
+  P@5   on eval-explore        : 0.0061
+  P@5   on eval-exploit-R2*    : 0.3135
+  P@5   on eval-exploit-S2*    : 0.2311
+  R@5   on eval                : 0.1556
+  R@5   on eval-exploit        : 1.0000
+  R@5   on eval-explore        : 0.0238
+  R@5   on eval-exploit-R2*    : 1.0000
+  R@5   on eval-exploit-S2*    : 1.0000
+  mAP@5 on eval                : 0.0919
+  mAP@5 on eval-exploit        : 1.0000
+  mAP@5 on eval-explore        : 0.0130
+  mAP@5 on eval-exploit-R2*    : 1.0000
+  mAP@5 on eval-exploit-S2*    : 1.0000
+  mRR@5 on eval                : 0.0894
+  mRR@5 on eval-exploit        : 0.8893
+  mRR@5 on eval-explore        : 0.0130
+  mRR@5 on eval-exploit-R2*    : 0.8904
+  mRR@5 on eval-exploit-S2*    : 0.9661
+=================================
+
+***** Epoch: 2 *****
+[4167 4167 4167 4167 4167 4167 4167 4167 4167 4167]
+[4167 4167 4167 4167 4167 4167 4167 4167 4167]
+[4167 4167 4167 4166 4166 4167 4167 4166 4167 4166]
+[4166 4167 4167 4167 4167 4167 4167 4167 4167]
+[0 0 0 1 1 0 0 1 0 1]
+[1 0 0 0 0 0 0 0 0]
+[0 0 0 1 1 0 0 0 0 1]
+[0 0 0 0 0 0 0 0 0]
+[0 0 0 0 0 0 0 1 0 0]
+[1 0 0 0 0 0 0 0 0]
+==========================================
+ [eval                ]: 19063   (1.6752)
+ [eval-exploit        ]: 16828   (1.6414)
+ [eval-explore        ]: 3363    (1.2822)
+ [eval-exploit-R2*    ]: 16090   (1.6319)
+ [eval-exploit-S2*    ]: 1176    (1.1607)
+==========================================
+  P@5   on eval                : 0.0881
+  P@5   on eval-exploit        : 0.3150
+  P@5   on eval-explore        : 0.0063
+  P@5   on eval-exploit-R2*    : 0.3135
+  P@5   on eval-exploit-S2*    : 0.2311
+  R@5   on eval                : 0.3000
+  R@5   on eval-exploit        : 1.0000
+  R@5   on eval-explore        : 0.0255
+  R@5   on eval-exploit-R2*    : 1.0000
+  R@5   on eval-exploit-S2*    : 1.0000
+  mAP@5 on eval                : 0.1975
+  mAP@5 on eval-exploit        : 1.0000
+  mAP@5 on eval-explore        : 0.0117
+  mAP@5 on eval-exploit-R2*    : 1.0000
+  mAP@5 on eval-exploit-S2*    : 1.0000
+  mRR@5 on eval                : 0.1917
+  mRR@5 on eval-exploit        : 0.8893
+  mRR@5 on eval-explore        : 0.0116
+  mRR@5 on eval-exploit-R2*    : 0.8904
+  mRR@5 on eval-exploit-S2*    : 0.9661
+=================================
+
+***** Epoch: 3 *****
+[4167 4167 4167 4167 4167 4167 4167 4167 4167 4167]
+[4167 4167 4167 4167 4167 4167 4167 4167 4167]
+[4167 4167 4167 4166 4166 4167 4167 4166 4167 4166]
+[4166 4167 4167 4167 4167 4167 4167 4167 4167]
+[0 0 0 1 1 0 0 1 0 1]
+[1 0 0 0 0 0 0 0 0]
+[0 0 0 1 1 0 0 0 0 1]
+[0 0 0 0 0 0 0 0 0]
+[0 0 0 0 0 0 0 1 0 0]
+[1 0 0 0 0 0 0 0 0]
+==========================================
+ [eval                ]: 19063   (1.6752)
+ [eval-exploit        ]: 16828   (1.6414)
+ [eval-explore        ]: 3363    (1.2822)
+ [eval-exploit-R2*    ]: 16090   (1.6319)
+ [eval-exploit-S2*    ]: 1176    (1.1607)
+==========================================
+  P@5   on eval                : 0.1271
+  P@5   on eval-exploit        : 0.3150
+  P@5   on eval-explore        : 0.0068
+  P@5   on eval-exploit-R2*    : 0.3135
+  P@5   on eval-exploit-S2*    : 0.2311
+  R@5   on eval                : 0.4424
+  R@5   on eval-exploit        : 1.0000
+  R@5   on eval-explore        : 0.0277
+  R@5   on eval-exploit-R2*    : 1.0000
+  R@5   on eval-exploit-S2*    : 1.0000
+  mAP@5 on eval                : 0.3102
+  mAP@5 on eval-exploit        : 1.0000
+  mAP@5 on eval-explore        : 0.0123
+  mAP@5 on eval-exploit-R2*    : 1.0000
+  mAP@5 on eval-exploit-S2*    : 1.0000
+  mRR@5 on eval                : 0.2989
+  mRR@5 on eval-exploit        : 0.8893
+  mRR@5 on eval-explore        : 0.0121
+  mRR@5 on eval-exploit-R2*    : 0.8904
+  mRR@5 on eval-exploit-S2*    : 0.9661
+=================================
+
+***** Epoch: 4 *****
+[4167 4167 4167 4167 4167 4167 4167 4167 4167 4167]
+[4167 4167 4167 4167 4167 4167 4167 4167 4167]
+[4167 4167 4167 4166 4166 4167 4167 4166 4167 4166]
+[4166 4167 4167 4167 4167 4167 4167 4167 4167]
+[0 0 0 1 1 0 0 1 0 1]
+[1 0 0 0 0 0 0 0 0]
+[0 0 0 1 1 0 0 0 0 1]
+[0 0 0 0 0 0 0 0 0]
+[0 0 0 0 0 0 0 1 0 0]
+[1 0 0 0 0 0 0 0 0]
+==========================================
+ [eval                ]: 19063   (1.6752)
+ [eval-exploit        ]: 16828   (1.6414)
+ [eval-explore        ]: 3363    (1.2822)
+ [eval-exploit-R2*    ]: 16090   (1.6319)
+ [eval-exploit-S2*    ]: 1176    (1.1607)
+==========================================
+  P@5   on eval                : 0.1554
+  P@5   on eval-exploit        : 0.3150
+  P@5   on eval-explore        : 0.0073
+  P@5   on eval-exploit-R2*    : 0.3135
+  P@5   on eval-exploit-S2*    : 0.2311
+  R@5   on eval                : 0.5393
+  R@5   on eval-exploit        : 1.0000
+  R@5   on eval-explore        : 0.0295
+  R@5   on eval-exploit-R2*    : 1.0000
+  R@5   on eval-exploit-S2*    : 1.0000
+  mAP@5 on eval                : 0.3981
+  mAP@5 on eval-exploit        : 1.0000
+  mAP@5 on eval-explore        : 0.0124
+  mAP@5 on eval-exploit-R2*    : 1.0000
+  mAP@5 on eval-exploit-S2*    : 1.0000
+  mRR@5 on eval                : 0.3798
+  mRR@5 on eval-exploit        : 0.8893
+  mRR@5 on eval-explore        : 0.0123
+  mRR@5 on eval-exploit-R2*    : 0.8904
+  mRR@5 on eval-exploit-S2*    : 0.9661
+=================================
+
+***** Epoch: 5 *****
+[4167 4167 4167 4167 4167 4167 4167 4167 4167 4167]
+[4167 4167 4167 4167 4167 4167 4167 4167 4167]
+[4167 4167 4167 4166 4166 4167 4167 4166 4167 4166]
+[4166 4167 4167 4167 4167 4167 4167 4167 4167]
+[0 0 0 1 1 0 0 1 0 1]
+[1 0 0 0 0 0 0 0 0]
+[0 0 0 1 1 0 0 0 0 1]
+[0 0 0 0 0 0 0 0 0]
+[0 0 0 0 0 0 0 1 0 0]
+[1 0 0 0 0 0 0 0 0]
+==========================================
+ [eval                ]: 19063   (1.6752)
+ [eval-exploit        ]: 16828   (1.6414)
+ [eval-explore        ]: 3363    (1.2822)
+ [eval-exploit-R2*    ]: 16090   (1.6319)
+ [eval-exploit-S2*    ]: 1176    (1.1607)
+==========================================
+  P@5   on eval                : 0.1747
+  P@5   on eval-exploit        : 0.3150
+  P@5   on eval-explore        : 0.0073
+  P@5   on eval-exploit-R2*    : 0.3135
+  P@5   on eval-exploit-S2*    : 0.2311
+  R@5   on eval                : 0.6021
+  R@5   on eval-exploit        : 1.0000
+  R@5   on eval-explore        : 0.0303
+  R@5   on eval-exploit-R2*    : 1.0000
+  R@5   on eval-exploit-S2*    : 1.0000
+  mAP@5 on eval                : 0.4565
+  mAP@5 on eval-exploit        : 1.0000
+  mAP@5 on eval-explore        : 0.0110
+  mAP@5 on eval-exploit-R2*    : 1.0000
+  mAP@5 on eval-exploit-S2*    : 1.0000
+  mRR@5 on eval                : 0.4318
+  mRR@5 on eval-exploit        : 0.8893
+  mRR@5 on eval-explore        : 0.0109
+  mRR@5 on eval-exploit-R2*    : 0.8904
+  mRR@5 on eval-exploit-S2*    : 0.9661
+=================================
+
+***** Epoch: 6 *****
+[4167 4167 4167 4167 4167 4167 4167 4167 4167 4167]
+[4167 4167 4167 4167 4167 4167 4167 4167 4167]
+[4167 4167 4167 4166 4166 4167 4167 4166 4167 4166]
+[4166 4167 4167 4167 4167 4167 4167 4167 4167]
+[0 0 0 1 1 0 0 1 0 1]
+[1 0 0 0 0 0 0 0 0]
+[0 0 0 1 1 0 0 0 0 1]
+[0 0 0 0 0 0 0 0 0]
+[0 0 0 0 0 0 0 1 0 0]
+[1 0 0 0 0 0 0 0 0]
+==========================================
+ [eval                ]: 19063   (1.6752)
+ [eval-exploit        ]: 16828   (1.6414)
+ [eval-explore        ]: 3363    (1.2822)
+ [eval-exploit-R2*    ]: 16090   (1.6319)
+ [eval-exploit-S2*    ]: 1176    (1.1607)
+==========================================
+  P@5   on eval                : 0.1888
+  P@5   on eval-exploit        : 0.3150
+  P@5   on eval-explore        : 0.0064
+  P@5   on eval-exploit-R2*    : 0.3135
+  P@5   on eval-exploit-S2*    : 0.2311
+  R@5   on eval                : 0.6453
+  R@5   on eval-exploit        : 1.0000
+  R@5   on eval-explore        : 0.0269
+  R@5   on eval-exploit-R2*    : 1.0000
+  R@5   on eval-exploit-S2*    : 1.0000
+  mAP@5 on eval                : 0.4962
+  mAP@5 on eval-exploit        : 1.0000
+  mAP@5 on eval-explore        : 0.0098
+  mAP@5 on eval-exploit-R2*    : 1.0000
+  mAP@5 on eval-exploit-S2*    : 1.0000
+  mRR@5 on eval                : 0.4665
+  mRR@5 on eval-exploit        : 0.8893
+  mRR@5 on eval-explore        : 0.0097
+  mRR@5 on eval-exploit-R2*    : 0.8904
+  mRR@5 on eval-exploit-S2*    : 0.9661
+=================================
+
+***** Epoch: 7 *****
+[4167 4167 4167 4167 4167 4167 4167 4167 4167 4167]
+[4167 4167 4167 4167 4167 4167 4167 4167 4167]
+[4167 4167 4167 4166 4166 4167 4167 4166 4167 4166]
+[4166 4167 4167 4167 4167 4167 4167 4167 4167]
+[0 0 0 1 1 0 0 1 0 1]
+[1 0 0 0 0 0 0 0 0]
+[0 0 0 1 1 0 0 0 0 1]
+[0 0 0 0 0 0 0 0 0]
+[0 0 0 0 0 0 0 1 0 0]
+[1 0 0 0 0 0 0 0 0]
+==========================================
+ [eval                ]: 19063   (1.6752)
+ [eval-exploit        ]: 16828   (1.6414)
+ [eval-explore        ]: 3363    (1.2822)
+ [eval-exploit-R2*    ]: 16090   (1.6319)
+ [eval-exploit-S2*    ]: 1176    (1.1607)
+==========================================
+  P@5   on eval                : 0.1991
+  P@5   on eval-exploit        : 0.3150
+  P@5   on eval-explore        : 0.0065
+  P@5   on eval-exploit-R2*    : 0.3135
+  P@5   on eval-exploit-S2*    : 0.2311
+  R@5   on eval                : 0.6773
+  R@5   on eval-exploit        : 1.0000
+  R@5   on eval-explore        : 0.0271
+  R@5   on eval-exploit-R2*    : 1.0000
+  R@5   on eval-exploit-S2*    : 1.0000
+  mAP@5 on eval                : 0.5257
+  mAP@5 on eval-exploit        : 1.0000
+  mAP@5 on eval-explore        : 0.0098
+  mAP@5 on eval-exploit-R2*    : 1.0000
+  mAP@5 on eval-exploit-S2*    : 1.0000
+  mRR@5 on eval                : 0.4918
+  mRR@5 on eval-exploit        : 0.8893
+  mRR@5 on eval-explore        : 0.0097
+  mRR@5 on eval-exploit-R2*    : 0.8904
+  mRR@5 on eval-exploit-S2*    : 0.9661
+=================================
+
+***** Epoch: 8 *****
+[4167 4167 4167 4167 4167 4167 4167 4167 4167 4167]
+[4167 4167 4167 4167 4167 4167 4167 4167 4167]
+[4167 4167 4167 4166 4166 4167 4167 4166 4167 4166]
+[4166 4167 4167 4167 4167 4167 4167 4167 4167]
+[0 0 0 1 1 0 0 1 0 1]
+[1 0 0 0 0 0 0 0 0]
+[0 0 0 1 1 0 0 0 0 1]
+[0 0 0 0 0 0 0 0 0]
+[0 0 0 0 0 0 0 1 0 0]
+[1 0 0 0 0 0 0 0 0]
+==========================================
+ [eval                ]: 19063   (1.6752)
+ [eval-exploit        ]: 16828   (1.6414)
+ [eval-explore        ]: 3363    (1.2822)
+ [eval-exploit-R2*    ]: 16090   (1.6319)
+ [eval-exploit-S2*    ]: 1176    (1.1607)
+==========================================
+  P@5   on eval                : 0.2061
+  P@5   on eval-exploit        : 0.3150
+  P@5   on eval-explore        : 0.0061
+  P@5   on eval-exploit-R2*    : 0.3135
+  P@5   on eval-exploit-S2*    : 0.2311
+  R@5   on eval                : 0.6975
+  R@5   on eval-exploit        : 1.0000
+  R@5   on eval-explore        : 0.0254
+  R@5   on eval-exploit-R2*    : 1.0000
+  R@5   on eval-exploit-S2*    : 1.0000
+  mAP@5 on eval                : 0.5444
+  mAP@5 on eval-exploit        : 1.0000
+  mAP@5 on eval-explore        : 0.0089
+  mAP@5 on eval-exploit-R2*    : 1.0000
+  mAP@5 on eval-exploit-S2*    : 1.0000
+  mRR@5 on eval                : 0.5071
+  mRR@5 on eval-exploit        : 0.8893
+  mRR@5 on eval-explore        : 0.0088
+  mRR@5 on eval-exploit-R2*    : 0.8904
+  mRR@5 on eval-exploit-S2*    : 0.9661
+=================================
+
+***** Epoch: 9 *****
+[4167 4167 4167 4167 4167 4167 4167 4167 4167 4167]
+[4167 4167 4167 4167 4167 4167 4167 4167 4167]
+[4167 4167 4167 4166 4166 4167 4167 4166 4167 4166]
+[4166 4167 4167 4167 4167 4167 4167 4167 4167]
+[0 0 0 1 1 0 0 1 0 1]
+[1 0 0 0 0 0 0 0 0]
+[0 0 0 1 1 0 0 0 0 1]
+[0 0 0 0 0 0 0 0 0]
+[0 0 0 0 0 0 0 1 0 0]
+[1 0 0 0 0 0 0 0 0]
+/usr/local/lib/python3.8/dist-packages/numpy/lib/arraysetops.py:569: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
+  mask |= (ar1 == a)
+==========================================
+ [eval                ]: 19063   (1.6752)
+ [eval-exploit        ]: 16828   (1.6414)
+ [eval-explore        ]: 3363    (1.2822)
+ [eval-exploit-R2*    ]: 16090   (1.6319)
+ [eval-exploit-S2*    ]: 1176    (1.1607)
+==========================================
+  P@5   on eval                : 0.2122
+  P@5   on eval-exploit        : 0.3150
+  P@5   on eval-explore        : 0.0061
+  P@5   on eval-exploit-R2*    : 0.3135
+  P@5   on eval-exploit-S2*    : 0.2311
+  R@5   on eval                : 0.7155
+  R@5   on eval-exploit        : 1.0000
+  R@5   on eval-explore        : 0.0257
+  R@5   on eval-exploit-R2*    : 1.0000
+  R@5   on eval-exploit-S2*    : 1.0000
+  mAP@5 on eval                : 0.5597
+  mAP@5 on eval-exploit        : 1.0000
+  mAP@5 on eval-explore        : 0.0088
+  mAP@5 on eval-exploit-R2*    : 1.0000
+  mAP@5 on eval-exploit-S2*    : 1.0000
+  mRR@5 on eval                : 0.5198
+  mRR@5 on eval-exploit        : 0.8893
+  mRR@5 on eval-explore        : 0.0087
+  mRR@5 on eval-exploit-R2*    : 0.8904
+  mRR@5 on eval-exploit-S2*    : 0.9661
+=================================
+
+***** Epoch: 10 *****
+[4167 4167 4167 4167 4167 4167 4167 4167 4167 4167]
+[4167 4167 4167 4167 4167 4167 4167 4167 4167]
+[4167 4167 4167 4166 4166 4167 4167 4166 4167 4166]
+[4166 4167 4167 4167 4167 4167 4167 4167 4167]
+[0 0 0 1 1 0 0 1 0 1]
+[1 0 0 0 0 0 0 0 0]
+[0 0 0 1 1 0 0 0 0 1]
+[0 0 0 0 0 0 0 0 0]
+[0 0 0 0 0 0 0 1 0 0]
+[1 0 0 0 0 0 0 0 0]
+[ 1  1  1  1  1  1  1 12  1  1]
+[11  1  1  2  2  1  2  4  5]
+[ 1  1  1  0  0  1  1 11  1  0]
+[10  1  1  2  2  1  2  4  5]
+[0 0 0 1 1 0 0 1 0 1]
+[1 0 0 0 0 0 0 0 0]
+[0 0 0 1 1 0 0 0 0 1]
+[0 0 0 0 0 0 0 0 0]
+[0 0 0 0 0 0 0 1 0 0]
+[1 0 0 0 0 0 0 0 0]
+[ 1  1  1  1  1  1  1 12  1  1]
+[11  1  1  2  2  1  2  4  5]
+[ 1  1  1  0  0  1  1 11  1  0]
+[10  1  1  2  2  1  2  4  5]
+[0 0 0 1 1 0 0 1 0 1]
+[1 0 0 0 0 0 0 0 0]
+[0 0 0 1 1 0 0 0 0 1]
+[0 0 0 0 0 0 0 0 0]
+[0 0 0 0 0 0 0 1 0 0]
+[1 0 0 0 0 0 0 0 0]
+==========================================
+ [eval                ]: 19063   (1.6752)
+ [eval-exploit        ]: 16828   (1.6414)
+ [eval-explore        ]: 3363    (1.2822)
+ [eval-exploit-R2*    ]: 16090   (1.6319)
+ [eval-exploit-S2*    ]: 1176    (1.1607)
+==========================================
+  P@5   on eval                : 0.2165
+  P@5   on eval-exploit        : 0.3150
+  P@5   on eval-explore        : 0.0058
+  P@5   on eval-exploit-R2*    : 0.3135
+  P@5   on eval-exploit-S2*    : 0.2311
+  R@5   on eval                : 0.7285
+  R@5   on eval-exploit        : 1.0000
+  R@5   on eval-explore        : 0.0247
+  R@5   on eval-exploit-R2*    : 1.0000
+  R@5   on eval-exploit-S2*    : 1.0000
+  mAP@5 on eval                : 0.5713
+  mAP@5 on eval-exploit        : 1.0000
+  mAP@5 on eval-explore        : 0.0084
+  mAP@5 on eval-exploit-R2*    : 1.0000
+  mAP@5 on eval-exploit-S2*    : 1.0000
+  mRR@5 on eval                : 0.5294
+  mRR@5 on eval-exploit        : 0.8893
+  mRR@5 on eval-explore        : 0.0083
+  mRR@5 on eval-exploit-R2*    : 0.8904
+  mRR@5 on eval-exploit-S2*    : 0.9661
+=================================
+
+Evaluation({                
+	evaluating sets: dict_keys(['eval', 'eval-exploit', 'eval-explore', 'eval-exploit-R2*', 'eval-exploit-S2*']),                
+})

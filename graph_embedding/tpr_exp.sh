@@ -1,0 +1,2 @@
+# python local_tpr_main.py --train=2018-12-31/training_transaction.csv --evaluation=2018-12-31/evaluation_transaction.csv --item_ft=2018-12-31/item_meta_features.csv --user_ft=2018-12-31/customer_meta_features.csv
+python local_tpr_main.py --train=2019-06-30/training_transaction.csv --evaluation=2019-06-30/evaluation_transaction.csv --item_ft=2019-06-30/item_meta_features.csv --user_ft=2019-06-30/customer_meta_features.csv

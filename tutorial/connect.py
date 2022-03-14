@@ -1,0 +1,5 @@
+c = plus_a_b(a,b)
+d = plus_a_b(a,c)
+e = plus_a_b(d,d)
+e_array = repeat(e)
+table = to_dataframe(e_array)
