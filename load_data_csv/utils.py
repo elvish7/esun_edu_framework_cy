@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 import datetime
-import random
 from tqdm import tqdm
 from collections import defaultdict
 from db_connection.utils import get_conn
@@ -45,7 +44,7 @@ def load_w103_eval(date, conn, d_start, d_end):
                                 deduct_cnt,
                                 etl_dt
                         from sinica.witwo103_hist 
-                        where wm_txn_code='1'and txn_dt>='{d_start}' and txn_dt<='{d_end}' and deduct_cnt <=1), 
+                        where wm_txn_code='1'and txn_dt>='{d_start}' and txn_dt<='{d_end}'), 
                 cte2 as (select distinct replace(wm_prod_code, ' ', '') as wm_prod_code
                         from sinica.witwo106
                         where replace(prod_detail_type_code, ' ','') in ('FNDF','FNDD')) 
@@ -53,6 +52,34 @@ def load_w103_eval(date, conn, d_start, d_end):
             from cte1 inner join cte2 on cte1.wm_prod_code=cte2.wm_prod_code order by cust_no
             """.format(d_start=d_start, d_end=d_end)
         return pd.read_sql(sql, conn)  
+
+def load_w103_all(today, rawdata_conn=None, span=18):
+    txn_start_dt, txn_end_dt = get_data_start_dt(today, span), today  
+    #assert datetime.strptime(
+    #    txn_start_dt, '%Y-%m-%d') <= datetime.strptime(
+    #    '2019-07-31', '%Y-%m-%d') 
+    #assert datetime.strptime(
+    #    txn_end_dt, '%Y-%m-%d') <= datetime.strptime(
+    #    '2019-07-31', '%Y-%m-%d') 
+    assert rawdata_conn 
+    sql = """
+    with 
+        cte1 as (select cust_id as cust_no, 
+                        replace(wm_prod_code, ' ', '') as wm_prod_code, 
+                        txn_dt, 
+                        (case when wms_txn_amt_twd is null then 1 else wms_txn_amt_twd end) as txn_amt,
+                        deduct_cnt,
+                        etl_dt
+                from sinica.witwo103_hist 
+                where wm_txn_code='1'and txn_dt>='{d_start}' and txn_dt<='{d_end}'), 
+        cte2 as (select distinct replace(wm_prod_code, ' ', '') as wm_prod_code
+                from sinica.witwo106
+                where replace(prod_detail_type_code, ' ','') in ('FNDF','FNDD')) 
+    select cte1.cust_no, cte1.wm_prod_code, cte1.txn_dt, cte1.txn_amt, cte1.deduct_cnt, cte1.etl_dt
+    from cte1 inner join cte2 on cte1.wm_prod_code=cte2.wm_prod_code order by cust_no
+    """.format(d_start=txn_start_dt, d_end=txn_end_dt)
+    w103 = pd.read_sql(sql, rawdata_conn)
+    return w103
 
 def load_w106(rawdata_conn = None):
     """
@@ -84,8 +111,32 @@ def load_w106(rawdata_conn = None):
     sql = """
             select
                 replace(wm_prod_code, ' ', '') as wm_prod_code,
+                high_yield_bond_ind,
+                invest_type,
                 mkt_rbot_ctg_ic,
                 replace(prod_detail_type_code, ' ','') as prod_detail_type_code,
+                prod_type_code,
+                prod_ccy,
+                prod_risk_code,
+                (case when substring(channel_web_ind, 1, 1)='Y' and substring(channel_web_ind, 5, 1)='Y' and
+                    substring(channel_mobile_ind, 1, 1)='Y' and substring(channel_mobile_ind, 5, 1)='Y' and
+                    fee_type_code='A' 
+                then 1 else 0 end) as can_rcmd_ind
+            from sinica.witwo106
+            where replace(prod_detail_type_code, ' ','') in ('FNDF','FNDD');
+            """
+    w106 = pd.read_sql(sql, rawdata_conn)
+    return w106
+
+def load_w106_all(rawdata_conn = None):
+    sql = """
+            select
+                replace(wm_prod_code, ' ', '') as wm_prod_code,
+                high_yield_bond_ind,
+                invest_type,
+                mkt_rbot_ctg_ic,
+                replace(prod_detail_type_code, ' ','') as prod_detail_type_code,
+                prod_type_code,
                 prod_ccy,
                 prod_risk_code,
                 (case when substring(channel_web_ind, 1, 1)='Y' and substring(channel_web_ind, 5, 1)='Y' and
@@ -164,9 +215,7 @@ def load_cust_dummy(today, rawdata_conn=None):
                     (case when income_range_code = '4' then 1 else 0 end)::numeric as income_range_code4,
                     (case when income_range_code is null then 1 else 0 end)::numeric as income_range_code0
                 from sinica.cm_customer_m
-                where (age between 20 and 69)
-                and biz_line_code = 'P' 
-                and cust_no in (select cust_no from cte0)
+                where cust_no in (select cust_no from cte0)
                 )
             select cust_no,
                     data_dt,
@@ -187,13 +236,16 @@ def load_cust_dummy(today, rawdata_conn=None):
     cust_pop = pd.read_sql(sql, rawdata_conn)
     return cust_pop
 
+#where (age between 20 and 69)
+#and biz_line_code = 'P' 
+
 #cust_pop modified version
-def load_cust_pop(today, rawdata_conn=None):
+def load_cust_pop(today, rawdata_conn=None, span=18):
     '''
     cte1:篩選個人戶、年紀 ; 類別變數encoding，na用xxx0做，cust_vintage空值補平均數
     cte2:處理duplicates:若有一樣的cust_no留下所有欄位最大值 ; cust_vintage: normalization
     '''
-    txn_start_dt, txn_end_dt = get_data_start_dt(today, 18), today  
+    txn_start_dt, txn_end_dt = get_data_start_dt(today, span), today  
     sql = """
         with
             cte0 as (select distinct cust_id as cust_no 
@@ -216,9 +268,7 @@ def load_cust_pop(today, rawdata_conn=None):
                     (case when income_range_code = '4' then 1 else 0 end)::numeric as income_range_code4,
                     (case when income_range_code is null then 1 else 0 end)::numeric as income_range_code0
                 from sinica.cm_customer_m
-                where (age between 20 and 69)
-                and biz_line_code = 'P' 
-                and cust_no in (select cust_no from cte0)
+                where cust_no in (select cust_no from cte0)
                 ),
             cte2 as (
                 select
@@ -269,24 +319,217 @@ def load_cust_pop(today, rawdata_conn=None):
             where rank = 1
         """.format(d_start=txn_start_dt, d_end=txn_end_dt)
     cust_pop = pd.read_sql(sql, rawdata_conn)
+    
+def load_cust_pop_all(today, rawdata_conn=None, span=18):
+    '''
+    cte1:篩選個人戶、年紀 ; 類別變數encoding，na用xxx0做，cust_vintage空值補平均數
+    cte2:處理duplicates:若有一樣的cust_no留下所有欄位最大值 ; cust_vintage: normalization
+    '''
+    txn_start_dt, txn_end_dt = get_data_start_dt(today, span), today  
+    sql = """
+        with
+            cte0 as (select distinct cust_id as cust_no 
+                     from sinica.witwo103_hist 
+                    where wm_txn_code='1'and txn_dt>='{d_start}' and txn_dt<='{d_end}'), 
+            cte1 as(
+                select * from sinica.cm_customer_m
+                where cust_no in (select cust_no from cte0)
+                ),
+            cte2 as (
+                select
+                    *,
+                    row_number() over (partition by cust_no order by etl_dt desc,
+                                                                     cust_vintage desc) as rank
+                from cte1
+                )
+            select * from cte2
+            where rank = 1
+        """.format(d_start=txn_start_dt, d_end=txn_end_dt)
+    cust_pop = pd.read_sql(sql, rawdata_conn)
     return cust_pop
 
-def top5_recommendation_user(popularity_dict, user_id, 
-                               item_list, mode):
-    if mode == 'random':
-        pred = random.sample(item_list, 5)
+def load_cust_pop_1202(today, rawdata_conn=None, span=18):
+    '''
+    cte1:篩選個人戶、年紀 ; 類別變數encoding，na用xxx0做，cust_vintage空值補平均數
+    cte2:處理duplicates:若有一樣的cust_no留下所有欄位最大值 ; cust_vintage: normalization
+    '''
+    txn_start_dt, txn_end_dt = get_data_start_dt(today, span), today  
+    sql = """
+        with
+            cte0 as (select distinct cust_id as cust_no 
+                     from sinica.witwo103_hist 
+                    where wm_txn_code='1'and txn_dt>='{d_start}' and txn_dt<='{d_end}'), 
+            cte1 as(
+                select
+                    cust_no,
+                    etl_dt,
+                    age,
+                    gender_code,
+                    cust_vintage,
+                    income_range_code,
+                    cust_vintage
+                from sinica.cm_customer_m
+                where cust_no in (select cust_no from cte0)
+                ),
+            cte2 as (
+                select
+                    cust_no,
+                    etl_dt,
+                    age,
+                    gender_code,
+                    income_range_code,
+                    cc_cust_level,
+                    children_cnt,
+                    cust_status_code,
+                    edu_code,
+                    house_own_type_code,
+                    martial_status_code,
+                    wm_club_class_code,
+                    work_years,
+                    data_ym,
+                    cust_start_dt,
+                    row_number() over (partition by cust_no order by etl_dt desc,
+                                                                     age desc,
+                                                                     cust_vintage desc,
+                                                                     income_range_code asc) as rank
+                from cte1
+                )
+            select cust_no,
+                    etl_dt,
+                    age,
+                    gender_code,
+                    cust_vintage,
+                    income_range_code,
+                    cc_cust_level,
+                    children_cnt,
+                    cust_status_code,
+                    edu_code,
+                    house_own_type_code,
+                    martial_status_code,
+                    wm_club_class_code,
+                    work_years,
+                    data_ym,
+                    cust_start_dt
+                    from cte2 
+                    where rank = 1
+        """.format(d_start=txn_start_dt, d_end=txn_end_dt)
+    cust_pop = pd.read_sql(sql, rawdata_conn)
+    return cust_pop
 
-    else: 
-        pred = [k for k, v in popularity_dict.items()]
+def load_cust_pop_0205(today, rawdata_conn=None, span=18):
+    '''
+    cte1:篩選個人戶、年紀 ; 類別變數encoding，na用xxx0做，cust_vintage空值補平均數
+    cte2:處理duplicates:若有一樣的cust_no留下所有欄位最大值 ; cust_vintage: normalization
+    '''
+    txn_start_dt, txn_end_dt = get_data_start_dt(today, span), today  
+    sql = """
+        with
+            cte0 as (select distinct cust_id as cust_no 
+                     from sinica.witwo103_hist 
+                    where wm_txn_code='1'and txn_dt>='{d_start}' and txn_dt<='{d_end}'), 
+            cte1 as(
+                select
+                    cust_no,
+                    etl_dt,
+                    age,
+                    gender_code,
+                    coalesce((select avg(cust_vintage) from sinica.cm_customer_m), cust_vintage) as cust_vintage,
+                    income_range_code
+                from sinica.cm_customer_m
+                where cust_no in (select cust_no from cte0)
+                ),
+            cte2 as (
+                select
+                    cust_no,
+                    etl_dt,
+                    age,
+                    gender_code,
+                    income_range_code,
+                    cust_vintage,
+                    row_number() over (partition by cust_no order by etl_dt desc,
+                                                                     age desc,
+                                                                     cust_vintage desc,
+                                                                     income_range_code asc) as rank
+                from cte1
+                )
+            select cust_no,
+                    etl_dt,
+                    age,
+                    gender_code,
+                    cust_vintage,
+                    income_range_code
+                    from cte2 
+                    where rank = 1
+        """.format(d_start=txn_start_dt, d_end=txn_end_dt)
+    cust_pop = pd.read_sql(sql, rawdata_conn)
+    return cust_pop
+
+def create_all_feature_pairs(features):
+    """
+    Create list containing all possible feature_name,feature_value pairs
+    """
+    feature_pairs = []
+    col = []
+    unique_features = []
+    for column in features.iloc[: , 1:]: #drop the first column
+        col += [column]*len(features[column].unique())
+        unique_features += list(features[column].unique())
+    for x,y in zip(col, unique_features):
+        pair = str(x)+ ":" +str(y)
+        feature_pairs.append(pair)
+    return feature_pairs
     
-    return pred
 
-def recommendation_all(popularity_dict, user_list, item_list, mode='random'):
+def concat_feature_colon_value(header, my_list):
+    """
+    Takes as input a list and prepends the columns names to respective values in the list.
+    For example: if my_list = [1,1,0,'del'],
+    resultant output = ['f1:1', 'f2:1', 'f3:0', 'loc:del']
+   
+    """
+    result = []
+    for x,y in zip(header,my_list):
+        res = str(x) +""+ str(y)
+        result.append(res)
+    return result
+
+def build_feature_tuples(features):
+    """
+    One user/item tuple: (item id, {feature name: feature weight})
+    Returns a list of tuples
+    """
+    feature_subset = features.iloc[: , 1:] #drop the first column
+    header = [f+':' for f in feature_subset.columns.tolist()]
+    feature_list = [list(f) for f in feature_subset.values]
+    feature_colon_value_list = []
+    for ft in feature_list:
+        feature_colon_value_list.append(concat_feature_colon_value(header, ft))
+    feature_tuples = list(zip(features.iloc[:,0], feature_colon_value_list))     
+    return feature_tuples
+
+def top5_recommendation_user(model, interactions, user_id, user_dict, 
+                               item_dict,threshold = 0,nrec_items = 5, user_features=None, item_features=None):
+    
+    n_users, n_items = interactions.shape
+    user_x = user_dict[user_id]
+    scores = pd.Series(model.predict(user_x,np.arange(n_items), user_features=user_features, item_features=item_features))
+    scores = list(pd.Series(scores.sort_values(ascending=False).index))
+    
+    #known_items = list(pd.Series(interactions.loc[user_id,:] \
+    #                             [interactions.loc[user_id,:] > threshold].index).sort_values(ascending=False))
+    
+    #scores = [x for x in scores if x not in known_items]
+    return_score_list = scores[0:5]
+    pred = [k for k, v in item_dict.items() if v in return_score_list]
+    
+    return user_id, pred
+
+def recommendation_all(model, intersections, user_li, user_dict, item_dict, user_features, item_features):
 
     predictions = defaultdict(list)
 
-    for user_id in tqdm(user_list, total=len(user_list)):
-        pred = top5_recommendation_user(popularity_dict, user_id, item_list, mode)
+    for u in tqdm(user_li, total=len(user_li)):
+        user_id, pred = top5_recommendation_user(model, intersections, u, user_dict, item_dict, user_features, item_features)
         predictions[user_id] = pred
 
     return predictions
