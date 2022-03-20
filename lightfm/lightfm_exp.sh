@@ -6,15 +6,16 @@ len=1m
 #for e in 10 20 30 40 50
 #do
 ## Pure CF no side information
-for d in 2019-06-30 2019-05-31 2019-04-30 2019-03-31 2019-02-28 2019-01-31 2018-12-31
-do
-for s in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18
-do
-    python3 lightfm_main.py --date ${d} --train_span ${s} --eval_duration ${len} --dim 128 --epoch 10 | grep 'Today' | awk -F' ' -vd=${d} -vs=${s} '{print d,s,$2,$5}' >> ${DIR}/lightfm_pure_cf_results.txt
+for d in 2018-12-31 2019-01-31 2019-02-28 2019-03-31 2019-04-30 2019-05-31 2019-06-30
+do 
+    for s in 18 6 
+    do
+        python3 lightfm_main.py --date ${d} --train_span ${s} --eval_duration ${len} --dim 128 --epoch 10 | grep 'Today' | awk -F' ' '{print $2,$4,$6,$8,$10,$12,$14}' >> ${DIR}/lightfm_pure_cf_results.txt
+    done
+# echo " " >> ${DIR}/lightfm_pure_cf_results.txt
 done
-echo " " >> ${DIR}/lightfm_pure_cf_results.txt
-done
-echo " " >> ${DIR}/lightfm_pure_cf_results.txt
+# echo " " >> ${DIR}/lightfm_pure_cf_results.txt
+
 ### With User Features
 #for d in 2019-06-30 2019-05-31 2019-04-30 2019-03-31 2019-02-28 2019-01-31 2018-12-31
 #do
