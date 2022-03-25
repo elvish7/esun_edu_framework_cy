@@ -9,8 +9,8 @@ from db_connection.crv_tools import db_tool as edu_db_tool
 def get_data_start_dt(etl_time_string, forward_months):
     """ 產製時間參數 """
     data_end_dt = pd.to_datetime(etl_time_string, format='%Y-%m-%d')
-    data_start_dt = data_end_dt - relativedelta(
-        months=forward_months) + relativedelta(days=1)
+    # Modified
+    data_start_dt = data_end_dt + relativedelta(days=1) - relativedelta(months=forward_months) 
     data_start = data_start_dt.strftime('%Y-%m-%d') 
     return data_start
 def get_conn(db_name):
