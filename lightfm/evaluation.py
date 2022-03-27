@@ -57,7 +57,9 @@ class Evaluation(ProcessBase):
     def get_data_dt(self, etl_time_string, backward_months):
         today = pd.to_datetime(etl_time_string, format='%Y-%m-%d')
         data_start_dt = today + relativedelta(days=1)
-        data_1m_end_dt = today + relativedelta(months=backward_months)
+        # data_1m_end_dt = today + relativedelta(months=backward_months)
+        # Modified
+        data_1m_end_dt = data_start_dt + relativedelta(months=backward_months) - relativedelta(days=1)
         data_7d_end_dt = today + relativedelta(days=7)
         data_start = data_start_dt.strftime('%Y-%m-%d')
         data_1m_end = data_1m_end_dt.strftime('%Y-%m-%d')
