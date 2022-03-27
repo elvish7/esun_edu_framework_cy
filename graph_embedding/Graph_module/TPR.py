@@ -47,7 +47,8 @@ class TPR:
         feature_list = [list(f) for f in feature_subset.values]
         feature_colon_value_list = []
         for ft in feature_list:
-            feature_colon_value_list.append(self.concat_feature_colon_value(header, ft))
+            #feature_colon_value_list.append(self.concat_feature_colon_value(header, ft))
+            feature_colon_value_list.append(ft) # no concat
         feature_tuples = list(zip(features.iloc[:,0], feature_colon_value_list))     
         temp = open(f'{self.input_iw_path}', 'w')
         for item_id, fts in feature_tuples:

@@ -9,7 +9,12 @@ import os
 from experiments.old_cust_baseline.experiment_module import old_cust_CF_baseline
 from utils import recommendation_all
 from evaluation import Evaluation
+
+from db_connection.utils import get_conn
+from utils import load_w103
 from mlaas_tools.config_build import config_set
+from mlaas_tools.config_build import config_set
+
 ## Configure env
 if not os.path.isfile('config.ini'):
     config_set()
@@ -89,10 +94,26 @@ score = rank_n_filter.pipe.cust_item_rating_matrix_out.get()
 
 pred = recommendation_all(score, user_id_map, item_id_map)
 
+# temp (to calculate warm/cold performance)
+## Load db connection
+rawdata_conn = get_conn('edu')
+print("Loading Data...----")
+w103_df = load_w103(today, rawdata_conn, span)
+purchase_hist = w103_df.groupby("cust_no")["wm_prod_code"].apply(lambda x: list(set(x.values.tolist()))).to_dict()
 
-evaluation = Evaluation(today, pred, duration)
+#evaluation = Evaluation(today, pred, duration)
+#score, upper = evaluation.results()
+#print(f'Today: {today} Training-Span: {span} Mean-Precision: {score}\n')
 
+## Evaluate results
+print("Evaluating Results...")
+evaluation = Evaluation(today, pred, duration, purchase_hist)
+warm_user, cold_user = evaluation.warm_cold_list()
+warm_pred = {k: v for k, v in pred.items() if k in warm_user}
+score, upper_bound = evaluation.results(warm_pred)
 
-score, upper = evaluation.results()
-print(f'Today: {today} Training-Span: {span} Mean-Precision: {score}\n')
+buy_old_user, buy_new_user, warm_start_user, cold_start_user = evaluation.purchase_statistic()
 
+print(f'Today: {today} Training-Span: {span} Warm-Start-Users: {warm_start_user} Cold-Start-Users: {cold_start_user} Mean-Precision: {score} Upper-Bound: {upper_bound} \n')
+
+print("Done!") 

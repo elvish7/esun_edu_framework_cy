@@ -8,6 +8,7 @@ from evaluation import Evaluation
 from mlaas_tools.config_build import config_set
 from db_connection.utils import get_conn
 from utils import recommendation_all, load_w103, load_w106, load_cust_pop, create_all_feature_pairs, build_feature_tuples, load_cust_pop_0205 #weighted
+
 ## Configure env
 if not os.path.isfile('config.ini'):
     config_set()

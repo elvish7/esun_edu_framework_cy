@@ -3,7 +3,7 @@ from dateutil.relativedelta import relativedelta
 from mlaas_tools.config_build import config_set
 from mlaas_tools.config_info import ConfigPass
 from mlaas_tools.db_tool import DatabaseConnections
-from experiments.old_cust_baseline.dataloader.crv_tools import db_tool as edu_db_tool
+from db_connection.crv_tools import db_tool as edu_db_tool
 # config_set()
 
 def get_data_start_dt(etl_time_string, forward_months):

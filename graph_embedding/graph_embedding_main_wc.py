@@ -8,7 +8,7 @@ from Graph_module.TPR import TPR
 import argparse
 from evaluation import Evaluation
 from db_connection.utils import get_conn
-from utils import load_w103, load_w106 
+from utils import load_w103, load_w106, w106_process 
 from mlaas_tools.config_build import config_set
 
 ## Configure env
@@ -31,18 +31,19 @@ eval_mode = args.eval_mode
 ## Load db connection
 rawdata_conn = get_conn('edu')
 ## Load data
-print("Loading Data...")
+print("Loading Data...----")
 w103_df = load_w103(today, rawdata_conn, span)
 purchase_hist = w103_df.groupby("cust_no")["wm_prod_code"].apply(lambda x: list(set(x.values.tolist()))).to_dict()
-w106_df = load_w106(rawdata_conn)
-_filter = w106_df.wm_prod_code.isin(w103_df['wm_prod_code'].tolist())
-w106_df_filter = w106_df[_filter]
-_selected_col = ['wm_prod_code', 'prod_detail_type_code','prod_ccy','prod_risk_code','can_rcmd_ind']
-w106_df_filter = w106_df_filter[_selected_col]
+
 ## Init SMORe
 if args.model == 'smore':
     model = SMORe(w103_df)
 else:
+    w106_df = load_w106(rawdata_conn)
+    _filter = w106_df.wm_prod_code.isin(w103_df['wm_prod_code'].tolist())
+    w106_df_filter = w106_df[_filter]
+    w106_df_filter = w106_process(w106_df_filter)
+    
     model = TPR(w103_df, w106_df_filter)
 ## Get user & item emb.
 print("Training Model...")
