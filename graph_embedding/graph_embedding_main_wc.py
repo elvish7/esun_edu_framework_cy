@@ -22,12 +22,14 @@ parser.add_argument("--eval_duration", default='1m', type=str, help="one month o
 parser.add_argument("--mode", default='bpr', type=str, help="choose algorithms")
 parser.add_argument("--model", default='tpr', type=str, help="choose tpr or smore")
 parser.add_argument("--eval_mode", default='warm', type=str, help="choose warm or cold")
+parser.add_argument("--feature_number", type=int, default=9, help="number of selected features")
 args = parser.parse_args()
 today = args.date
 span = args.train_span
 duration = args.eval_duration
 algo = args.mode
 eval_mode = args.eval_mode
+f_num = args.feature_number
 ## Load db connection
 rawdata_conn = get_conn('edu')
 ## Load data
@@ -43,6 +45,10 @@ else:
     _filter = w106_df.wm_prod_code.isin(w103_df['wm_prod_code'].tolist())
     w106_df_filter = w106_df[_filter]
     w106_df_filter = w106_process(w106_df_filter)
+    # feature selection
+    _selected_col = ['wm_prod_code','can_rcmd_ind', 'invest_type','prod_risk_code', 'prod_detail_type_code', 'mkt_rbot_ctg_ic', 'counterparty_code', 'prod_ccy', 'high_yield_bond_ind']
+    w106_df_filter = w106_df_filter[_selected_col[:f_num]]
+    print('selected features:', _selected_col[:f_num])
     
     model = TPR(w103_df, w106_df_filter)
 ## Get user & item emb.

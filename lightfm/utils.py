@@ -111,22 +111,32 @@ def load_w106(rawdata_conn = None):
     sql = """
             select
                 replace(wm_prod_code, ' ', '') as wm_prod_code,
-                high_yield_bond_ind,
-                invest_type,
-                mkt_rbot_ctg_ic,
-                replace(prod_detail_type_code, ' ','') as prod_detail_type_code,
-                prod_type_code,
-                prod_ccy,
-                prod_risk_code,
                 (case when substring(channel_web_ind, 1, 1)='Y' and substring(channel_web_ind, 5, 1)='Y' and
                     substring(channel_mobile_ind, 1, 1)='Y' and substring(channel_mobile_ind, 5, 1)='Y' and
                     fee_type_code='A' 
-                then 1 else 0 end) as can_rcmd_ind
+                then 1 else 0 end) as can_rcmd_ind,
+                high_yield_bond_ind,
+                counterparty_code,
+                invest_type,
+                mkt_rbot_ctg_ic,
+                prod_ccy,
+                replace(prod_detail_type_code, ' ','') as prod_detail_type_code,
+                prod_risk_code
             from sinica.witwo106
             where replace(prod_detail_type_code, ' ','') in ('FNDF','FNDD');
             """
     w106 = pd.read_sql(sql, rawdata_conn)
     return w106
+
+def w106_process(df):
+    # discard categorization
+    discard_condition = {'counterparty_code': 100, 'mkt_rbot_ctg_ic': 200, 'prod_ccy': 500}
+    for col, n in discard_condition.items(): 
+        df.loc[df[col].value_counts()[df[col]].values<n, col] = col+'_other'
+    # convert int to categorical
+    df['high_yield_bond_ind'] = df['high_yield_bond_ind'].map({'Y': 'high_yield', 'N': 'not_high_yield'})
+    df['can_rcmd_ind'] = df['can_rcmd_ind'].map({1:'can_rcmd', 0: 'can_rcmd_N'})
+    return df
 
 def load_w106_all(rawdata_conn = None):
     sql = """

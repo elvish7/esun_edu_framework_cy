@@ -7,7 +7,7 @@ from lightfm.data import Dataset
 from evaluation import Evaluation
 from mlaas_tools.config_build import config_set
 from db_connection.utils import get_conn
-from utils import recommendation_all, load_w103, load_w106, load_cust_pop, create_all_feature_pairs, build_feature_tuples, load_cust_pop_0205 #weighted
+from utils import recommendation_all, load_w103, load_w106, w106_process, load_cust_pop, create_all_feature_pairs, build_feature_tuples, load_cust_pop_0205 #weighted
 
 ## Configure env
 if not os.path.isfile('config.ini'):
@@ -49,8 +49,9 @@ if args.user_ft:
 if args.item_ft:
     _filter = w106_df.wm_prod_code.isin(w103_df['wm_prod_code'].tolist())
     w106_df_filter = w106_df[_filter]
-    _selected_col = ['wm_prod_code','prod_detail_type_code','prod_ccy','prod_risk_code','can_rcmd_ind']
-    w106_df_filter = w106_df_filter[_selected_col]
+    w106_df_filter = w106_process(w106_df_filter)
+    #_selected_col = ['wm_prod_code','prod_detail_type_code','prod_ccy','prod_risk_code','can_rcmd_ind']
+    #w106_df_filter = w106_df_filter[_selected_col]
 ## Create features
 user_fts, item_fts = None, None
 if args.user_ft:
