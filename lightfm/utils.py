@@ -159,6 +159,61 @@ def load_w106_all(rawdata_conn = None):
     w106 = pd.read_sql(sql, rawdata_conn)
     return w106
 
+def load_cust(today, rawdata_conn=None, span=18):
+    '''
+    cte1:處理duplicates:若有一樣的cust_no留下所有欄位最大值 ; 
+    '''
+    txn_start_dt, txn_end_dt = get_data_start_dt(today, span), today  
+    sql = """
+        with
+            cte0 as (select distinct cust_id as cust_no 
+                     from sinica.witwo103_hist 
+                    where wm_txn_code='1'and txn_dt>='{d_start}' and txn_dt<='{d_end}'), 
+            cte1 as(
+                select
+                    cust_no,
+                    etl_dt,
+                    age,
+                    gender_code,
+                    cust_vintage,
+                    income_range_code,
+                    risk_type_code,
+                    children_cnt,
+                    edu_code,
+                    wm_club_class_code,
+                    row_number() over (partition by cust_no order by etl_dt desc,
+                                                                     age desc,
+                                                                     cust_vintage desc,
+                                                                     income_range_code asc) as rank
+                from sinica.cm_customer_m
+                where cust_no in (select cust_no from cte0)
+                )
+            select cust_no,
+                    age,
+                    gender_code,
+                    cust_vintage,
+                    income_range_code,
+                    risk_type_code,
+                    children_cnt,
+                    edu_code,
+                    wm_club_class_code
+                    from cte1 
+                    where rank = 1
+        """.format(d_start=txn_start_dt, d_end=txn_end_dt)
+    cust_df = pd.read_sql(sql, rawdata_conn)
+    return cust_df
+
+def cust_process(df):
+    df = df.apply(lambda x:x.fillna(x.value_counts().index[0]))
+    df[df['children_cnt']>=4] = 4
+    # continuous value
+    df['age'] = pd.cut(df['age'], bins=[0, 18, 30, 50, 100], labels=False)
+    df['cust_vintage'] = pd.qcut(df['cust_vintage'], 4, labels=False, duplicates='drop')
+    return df
+
+
+
+
 def load_w118(nav_start_dt, nav_end_dt, rawdata_conn=None):
     '''
     * 得到 w118 基金淨值相關特徵

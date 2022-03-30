@@ -83,245 +83,65 @@ def load_w106(rawdata_conn = None):
     w106 = pd.read_sql(sql, rawdata_conn)
     return w106
 
-def load_w118(nav_start_dt, nav_end_dt, rawdata_conn=None):
-    '''
-    * 得到 w118 基金淨值相關特徵
-    
-    Inputs: 
-    - nav_start_dt, nav_end_dt: 
-        The start and end timestamp of net average price. 
-    - rawdata_conn: obtained from conns.get_rawdata_db_conn(). 
-    
-    Outputs: 
-    - w118 基金淨值相關特徵
-    
-    Notes: 
-    - 產學資料的最後一天是'2019-07-31'，
-        因此nav_start_dt, nav_end_dt都不能超過這一天。
-    
-    '''
-    assert datetime.strptime(
-        nav_start_dt, '%Y-%m-%d') <= datetime.strptime(
-        '2019-07-31', '%Y-%m-%d') 
-    assert datetime.strptime(
-        nav_end_dt, '%Y-%m-%d') <= datetime.strptime(
-        '2019-07-31', '%Y-%m-%d') 
-    assert rawdata_conn 
-    # w118
-    sql = """
-            select
-                nav_date, 
-                replace(product_code, ' ', '') as product_code, 
-                purchase_val,
-                redeem_val
-            from sinica.witwo118
-            where nav_date>='{d_start}' and nav_date<='{d_end}';
-            """.format(d_start=nav_start_dt, d_end=nav_end_dt)
+def w106_process(df):
+    # discard categorization
+    discard_condition = {'counterparty_code': 100, 'mkt_rbot_ctg_ic': 200, 'prod_ccy': 500}
+    for col, n in discard_condition.items(): 
+        df.loc[df[col].value_counts()[df[col]].values<n, col] = col+'_other'
+    # convert int to categorical
+    df['high_yield_bond_ind'] = df['high_yield_bond_ind'].map({'Y': 'high_yield', 'N': 'not_high_yield'})
+    df['can_rcmd_ind'] = df['can_rcmd_ind'].map({1:'can_rcmd', 0: 'can_rcmd_N'})
+    del df['invest_limited_code']
+    return df
 
-    w118 = pd.read_sql(sql, rawdata_conn)
-    return w118
-
-def load_cust_dummy(today, rawdata_conn=None):
+def load_cust(today, rawdata_conn=None, span=18):
     '''
-    cte1:篩選個人戶、年紀 ; 類別變數encoding，na用xxx0做，cust_vintage空值補平均數
-    cte2:處理duplicates:若有一樣的cust_no留下所有欄位最大值 ; cust_vintage: normalization
+    cte1:處理duplicates:若有一樣的cust_no留下所有欄位最大值 ; 
     '''
-    txn_start_dt, txn_end_dt = get_data_start_dt(today, 18), today  
+    txn_start_dt, txn_end_dt = get_data_start_dt(today, span), today  
     sql = """
         with
             cte0 as (select distinct cust_id as cust_no 
                      from sinica.witwo103_hist 
                     where wm_txn_code='1'and txn_dt>='{d_start}' and txn_dt<='{d_end}'), 
             cte1 as(
-                select distinct
-                    cust_no,
-                    etl_dt as data_dt,
-                    age,
-                    gender_code,
-                    (case when gender_code = 'M' then 1 else 0 end)::numeric as gender_code1,
-                    (case when gender_code = 'F' then 1 else 0 end)::numeric as gender_code2,
-                    (case when gender_code is null then 1 else 0 end)::numeric as gender_code0,
-                    coalesce((select avg(cust_vintage) from sinica.cm_customer_m), cust_vintage) as cust_vintage,
-                    income_range_code,
-                    (case when income_range_code = '1' then 1 else 0 end)::numeric as income_range_code1,
-                    (case when income_range_code = '2' then 1 else 0 end)::numeric as income_range_code2,
-                    (case when income_range_code = '3' then 1 else 0 end)::numeric as income_range_code3,
-                    (case when income_range_code = '4' then 1 else 0 end)::numeric as income_range_code4,
-                    (case when income_range_code is null then 1 else 0 end)::numeric as income_range_code0
-                from sinica.cm_customer_m
-                where (age between 20 and 69)
-                and biz_line_code = 'P' 
-                and cust_no in (select cust_no from cte0)
-                )
-            select cust_no,
-                    data_dt,
-                    age,
-                    gender_code,
-                    gender_code1,
-                    gender_code2,
-                    gender_code0,
-                    cust_vintage,
-                    income_range_code,
-                    income_range_code1,
-                    income_range_code2,
-                    income_range_code3,
-                    income_range_code4,
-                    income_range_code0
-            from cte1
-        """.format(d_start=txn_start_dt, d_end=txn_end_dt)
-    cust_pop = pd.read_sql(sql, rawdata_conn)
-    return cust_pop
-
-#cust_pop modified version
-def load_cust_pop(today, rawdata_conn=None):
-    '''
-    cte1:篩選個人戶、年紀 ; 類別變數encoding，na用xxx0做，cust_vintage空值補平均數
-    cte2:處理duplicates:若有一樣的cust_no留下所有欄位最大值 ; cust_vintage: normalization
-    '''
-    txn_start_dt, txn_end_dt = get_data_start_dt(today, 18), today  
-    sql = """
-        with
-            cte0 as (select distinct cust_id as cust_no 
-                     from sinica.witwo103_hist 
-                    where wm_txn_code='1'and txn_dt>='{d_start}' and txn_dt<='{d_end}'), 
-            cte1 as(
-                select distinct
-                    cust_no,
-                    etl_dt as data_dt,
-                    age,
-                    gender_code,
-                    (case when gender_code = 'M' then 1 else 0 end)::numeric as gender_code1,
-                    (case when gender_code = 'F' then 1 else 0 end)::numeric as gender_code2,
-                    (case when gender_code is null then 1 else 0 end)::numeric as gender_code0,
-                    coalesce((select avg(cust_vintage) from sinica.cm_customer_m), cust_vintage) as cust_vintage,
-                    income_range_code,
-                    (case when income_range_code = '1' then 1 else 0 end)::numeric as income_range_code1,
-                    (case when income_range_code = '2' then 1 else 0 end)::numeric as income_range_code2,
-                    (case when income_range_code = '3' then 1 else 0 end)::numeric as income_range_code3,
-                    (case when income_range_code = '4' then 1 else 0 end)::numeric as income_range_code4,
-                    (case when income_range_code is null then 1 else 0 end)::numeric as income_range_code0
-                from sinica.cm_customer_m
-                where (age between 20 and 69)
-                and biz_line_code = 'P' 
-                and cust_no in (select cust_no from cte0)
-                ),
-            cte2 as (
                 select
                     cust_no,
-                    data_dt,
+                    etl_dt,
                     age,
                     gender_code,
-                    gender_code1,
-                    gender_code2,
-                    gender_code0,
-                    ((cust_vintage
-                    - (select min(cust_vintage) from sinica.cm_customer_m))
-                    /((select max(cust_vintage) from sinica.cm_customer_m)
-                    - (select min(cust_vintage) from sinica.cm_customer_m))) as cust_vintage,
-                    income_range_code,
-                    income_range_code1,
-                    income_range_code2,
-                    income_range_code3,
-                    income_range_code4,
-                    income_range_code0,
-                    row_number() over (partition by cust_no order by age desc,
-                                                                     cust_vintage desc,
-                                                                     income_range_code1 desc,
-                                                                     income_range_code2 desc,
-                                                                     income_range_code3 desc,
-                                                                     income_range_code4 desc,
-                                                                     income_range_code0 desc,
-                                                                     gender_code1 desc,
-                                                                     gender_code2 desc,
-                                                                     gender_code0 desc) as rank
-                from cte1
-                )
-            select cust_no,
-                    data_dt,
-                    age,
-                    gender_code,
-                    gender_code1,
-                    gender_code2,
-                    gender_code0,
                     cust_vintage,
                     income_range_code,
-                    income_range_code1,
-                    income_range_code2,
-                    income_range_code3,
-                    income_range_code4,
-                    income_range_code0
-            from cte2
-            where rank = 1
+                    risk_type_code,
+                    children_cnt,
+                    edu_code,
+                    wm_club_class_code,
+                    row_number() over (partition by cust_no order by etl_dt desc,
+                                                                     age desc,
+                                                                     cust_vintage desc,
+                                                                     income_range_code asc) as rank
+                from sinica.cm_customer_m
+                where cust_no in (select cust_no from cte0)
+                )
+            select cust_no,
+                    age,
+                    gender_code,
+                    cust_vintage,
+                    income_range_code,
+                    risk_type_code,
+                    children_cnt,
+                    edu_code,
+                    wm_club_class_code
+                    from cte1 
+                    where rank = 1
         """.format(d_start=txn_start_dt, d_end=txn_end_dt)
-    cust_pop = pd.read_sql(sql, rawdata_conn)
-    return cust_pop
+    cust_df = pd.read_sql(sql, rawdata_conn)
+    return cust_df
 
-def create_all_feature_pairs(features):
-    """
-    Create list containing all possible feature_name,feature_value pairs
-    """
-    feature_pairs = []
-    col = []
-    unique_features = []
-    for column in features.iloc[: , 1:]: #drop the first column
-        col += [column]*len(features[column].unique())
-        unique_features += list(features[column].unique())
-    for x,y in zip(col, unique_features):
-        pair = str(x)+ ":" +str(y)
-        feature_pairs.append(pair)
-    return feature_pairs
-    
-
-def concat_feature_colon_value(header, my_list):
-    """
-    Takes as input a list and prepends the columns names to respective values in the list.
-    For example: if my_list = [1,1,0,'del'],
-    resultant output = ['f1:1', 'f2:1', 'f3:0', 'loc:del']
-   
-    """
-    result = []
-    for x,y in zip(header,my_list):
-        res = str(x) +""+ str(y)
-        result.append(res)
-    return result
-
-def build_feature_tuples(features):
-    """
-    One user/item tuple: (item id, {feature name: feature weight})
-    Returns a list of tuples
-    """
-    feature_subset = features.iloc[: , 1:] #drop the first column
-    header = [f+':' for f in feature_subset.columns.tolist()]
-    feature_list = [list(f) for f in feature_subset.values]
-    feature_colon_value_list = []
-    for ft in feature_list:
-        feature_colon_value_list.append(concat_feature_colon_value(header, ft))
-    feature_tuples = list(zip(features.iloc[:,0], feature_colon_value_list))     
-    return feature_tuples
-
-def top5_recommendation_user(model, interactions, user_id, user_dict, 
-                               item_dict,threshold = 0,nrec_items = 5):
-    
-    n_users, n_items = interactions.shape
-    user_x = user_dict[user_id]
-    scores = pd.Series(model.predict(user_x,np.arange(n_items)))
-    scores = list(pd.Series(scores.sort_values(ascending=False).index))
-    
-    #known_items = list(pd.Series(interactions.loc[user_id,:] \
-    #                             [interactions.loc[user_id,:] > threshold].index).sort_values(ascending=False))
-    
-    #scores = [x for x in scores if x not in known_items]
-    return_score_list = scores[0:nrec_items]
-    pred = [k for k, v in item_dict.items() if v in return_score_list]
-    
-    return user_id, pred
-
-def recommendation_all(model, intersections, user_li, user_dict, item_dict):
-
-    predictions = defaultdict(list)
-
-    for u in tqdm(user_li, total=len(user_li)):
-        user_id, pred = top5_recommendation_user(model, intersections, u, user_dict, item_dict)
-        predictions[user_id] = pred
-
-    return predictions
+def cust_process(df):
+    df = df.apply(lambda x:x.fillna(x.value_counts().index[0]))
+    df[df['children_cnt']>=4] = 4
+    # continuous value
+    df['age'] = pd.cut(df['age'], bins=[0, 18, 30, 50, 100], labels=False)
+    df['cust_vintage'] = pd.qcut(df['cust_vintage'], 4, labels=False, duplicates='drop')
+    return df

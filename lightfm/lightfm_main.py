@@ -7,7 +7,7 @@ from lightfm.data import Dataset
 from evaluation import Evaluation
 from mlaas_tools.config_build import config_set
 from db_connection.utils import get_conn
-from utils import recommendation_all, load_w103, load_w106, w106_process, load_cust_pop, create_all_feature_pairs, build_feature_tuples, load_cust_pop_0205 #weighted
+from utils import recommendation_all, load_w103, load_w106, w106_process, load_cust, cust_process, create_all_feature_pairs, build_feature_tuples, load_cust_pop_0205 #weighted
 
 ## Configure env
 if not os.path.isfile('config.ini'):
@@ -36,15 +36,16 @@ print("Loading Data...")
 w103_df = load_w103(today, rawdata_conn, span)
 purchase_hist = w103_df.groupby("cust_no")["wm_prod_code"].apply(lambda x: list(set(x.values.tolist()))).to_dict()
 if args.user_ft:
-    cm_customer_m_df = load_cust_pop_0205(today, rawdata_conn, span=span)
+    cm_customer_m_df = load_cust(today, rawdata_conn, span=span)
 if args.item_ft:
     w106_df = load_w106(rawdata_conn)
 ## Intersection of w103 & cm_customer_m wrt cust_no
 if args.user_ft:
     _filter = cm_customer_m_df.cust_no.isin(w103_df['cust_no'].tolist())
     cust_df_filter = cm_customer_m_df[_filter]
-    _selected_col = ['cust_no', 'age', 'gender_code', 'cust_vintage', 'income_range_code']
-    cust_df_filter = cust_df_filter[_selected_col]
+    cust_df_filter = cust_process(cust_df_filter)
+    #_selected_col = ['cust_no', 'age', 'gender_code', 'cust_vintage', 'income_range_code']
+    #cust_df_filter = cust_df_filter[_selected_col]
 ## Intersection of w103 & w106 wrt wm_prod_code
 if args.item_ft:
     _filter = w106_df.wm_prod_code.isin(w103_df['wm_prod_code'].tolist())
