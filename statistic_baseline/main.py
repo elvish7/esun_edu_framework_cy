@@ -38,7 +38,11 @@ item_list = w103_df['wm_prod_code'].unique().tolist()
 ## Popularity
 popularity_dict = {}
 if mode == 'popularity':
-    popularity_dict = w103_df.groupby("wm_prod_code")["wm_prod_code"].count().sort_values(ascending=False).head(5).to_dict()
+    #popularity_dict = w103_df.groupby("wm_prod_code")["wm_prod_code"].count().sort_values(ascending=False).head(5).to_dict()
+    top5_fund = w103_df.groupby(["cust_no","wm_prod_code"])["wm_prod_code"].count().sort_values(ascending=False).head(5).index.to_list()
+    top5_fund = [i[1] for i in top5_fund]
+    popularity_dict = {i:0 for i in top5_fund}
+
 ## Recommend each user's top5 funds
 print("Predicting...")
 pred = recommendation_all(popularity_dict, user_list, item_list, mode=mode)
