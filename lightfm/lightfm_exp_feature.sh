@@ -10,7 +10,7 @@ do
         for s in 18 6 
         do
             ### With User & Item Features
-            python3 lightfm_main.py --date ${d} --train_span ${s} --eval_duration ${len} --dim 128 --epoch 10 --user_ft | grep 'Today' | awk -F' ' '{print $2,$4,$6,$8,$10,$12,$14,$15}' >> ${DIR}/lightfm_userfeature_select_results.txt
+            python3 lightfm_main.py --date ${d} --train_span ${s} --eval_duration ${len} --dim 128 --epoch 10 --user_ft | grep 'Today' | awk -F' ' '{print $2,$4,$6,$8,$10,$12,$14}' >> ${DIR}/lightfm_userfeature_select_results${fn}.txt
         done
     done
 done
