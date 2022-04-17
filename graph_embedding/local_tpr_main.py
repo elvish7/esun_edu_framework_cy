@@ -28,7 +28,7 @@ if args.model == 'tpr':
     w106_df = pd.read_csv(item_feature_path)
     _filter = w106_df.wm_prod_code.isin(w103_df['wm_prod_code'].tolist())
     w106_df_filter = w106_df[_filter]
-    _selected_col = ['wm_prod_code', 'prod_detail_type_code','prod_ccy','prod_risk_code','can_rcmd_ind']
+    _selected_col = ['wm_prod_code']#, 'prod_detail_type_code','prod_ccy','prod_risk_code','can_rcmd_ind']
     w106_df_filter = w106_df_filter[_selected_col]
     #cm_customer_m_df = pd.read_csv(user_feature_path)
 ## Init SMORe
