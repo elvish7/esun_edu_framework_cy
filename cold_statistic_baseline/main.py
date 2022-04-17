@@ -6,7 +6,9 @@ import matplotlib
 from evaluation import Evaluation
 from mlaas_tools.config_build import config_set
 from db_connection.utils import get_conn
-from utils import load_w103, load_w106, load_cust
+from utils import load_w103, load_w106, load_cust, fast_topK
+from sklearn.metrics.pairwise import cosine_similarity
+
 ## Configure env
 if not os.path.isfile('config.ini'):
     config_set()
@@ -15,8 +17,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--date", help="Recommendation date")
 parser.add_argument("--eval_duration", default='1m', type=str, help="one month or 7 days")
 parser.add_argument("--train_span", type=int, default=1, help="Training Period")
-parser.add_argument("--mode", type=str, default='popularity', help="random or popularity")
-parser.add_argument("--eval_mode", default='warm', type=str, help="choose warm or cold")
+parser.add_argument("--mode", type=str, default='popularity', help="popularity or similarity")
+parser.add_argument("--eval_mode", default='cold', type=str, help="choose warm or cold")
 args = parser.parse_args()
 today = args.date
 duration = args.eval_duration
@@ -52,10 +54,11 @@ print('warm-users:', len(warm_users), 'cold-users:', len(cold_users))
 # cold start users
 user_list = evaluate_w103[evaluate_w103['cust_no'].isin(cold_users)]['cust_no'].unique().tolist()
 print(len(user_list))
-## Popularity
+
 ## Recommend each user's top5 funds
 print("Predicting...")
 popularity_dict = {}
+## Popularity
 if mode == 'popularity':
     # by unique user
     #top5_fund = w103_df.groupby(["cust_no","wm_prod_code"])["wm_prod_code"].count().sort_values(ascending=False).head(5).index.to_list()
@@ -63,6 +66,28 @@ if mode == 'popularity':
     # by all data
     top5_fund = w103_df.groupby("wm_prod_code")["wm_prod_code"].count().sort_values(ascending=False).head(5).index.to_list()
     pred = {u: top5_fund for u in user_list}
+
+if mode == 'similarity':
+    eva_cust_df_cold = eva_cust_df_filter[eva_cust_df_filter['cust_no'].isin(user_list)]
+    cat_cols = ['gender_code', 'income_range_code','risk_type_code', 'edu_code', 'wm_club_class_code']
+    all_dummy = pd.get_dummies(pd.concat([cust_df_filter, eva_cust_df_cold]), columns=cat_cols)
+    cust_old_matrix = all_dummy.iloc[:len(cust_df_filter)].iloc[:, 1:].values
+    cust_new_matrix = all_dummy.iloc[len(cust_df_filter):].iloc[:, 1:].values
+    sim = cosine_similarity(cust_new_matrix, cust_old_matrix)
+    # get the topk similar old users for each cold start user
+    topk_sim_old_user = fast_topK(sim, 5)
+    old_cust_idx = cust_df_filter.reset_index().cust_no.to_dict()
+    for i in range(len(topk_sim_old_user)):
+        topk_sim_old_user[i] = [old_cust_idx[j] for j in topk_sim_old_user[i]]
+    # recommend by topk old user's bought funds
+    recommend_funds = []
+    for i in topk_sim_old_user:
+        hist_fund = []
+        for old_u in i:
+            hist_fund += purchase_hist[old_u]
+        recommend_funds.append(hist_fund[:5])
+    pred = {u: v for u, v in zip(eva_cust_df_cold.cust_no, recommend_funds)}
+    
     
 ## Evaluate results
 print("Evaluating Results...")

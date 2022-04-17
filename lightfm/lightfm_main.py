@@ -22,6 +22,7 @@ parser.add_argument("--epoch", default=20, type=int, help="epoch num")
 parser.add_argument("--user_ft", help="Use user features", action='store_true')
 parser.add_argument("--item_ft", help="Use item features", action='store_true')
 parser.add_argument("--eval_mode", default='warm', type=str, help="choose warm or cold")
+parser.add_argument("--feature_number", type=int, default=9, help="number of selected features")
 args = parser.parse_args()
 today = args.date
 span = args.train_span
@@ -29,6 +30,8 @@ duration = args.eval_duration
 dim = args.dim
 epoch = args.epoch
 eval_mode = args.eval_mode
+f_num = args.feature_number
+
 ## Load db connection
 rawdata_conn = get_conn('edu')
 ## Load data
@@ -45,16 +48,15 @@ if args.user_ft:
     user_filter = set(w103_df['cust_no'].tolist()) & set(cm_customer_m_df['cust_no'].tolist())
     w103_df = w103_df[w103_df['cust_no'].isin(user_filter)]
     cust_df_filter = cm_customer_m_df[cm_customer_m_df['cust_no'].isin(user_filter)]
-    
-    #_selected_col = ['cust_no', 'age', 'gender_code', 'cust_vintage', 'income_range_code']
-    #cust_df_filter = cust_df_filter[_selected_col]
+    _selected_col = ['cust_no', 'age', 'gender_code', 'cust_vintage', 'income_range_code', 'risk_type_code', 'children_cnt', 'edu_code', 'wm_club_class_code']
+    cust_df_filter = cust_df_filter[_selected_col[:f_num]]
 ## Intersection of w103 & w106 wrt wm_prod_code
 if args.item_ft:
     _filter = w106_df.wm_prod_code.isin(w103_df['wm_prod_code'].tolist())
     w106_df_filter = w106_df[_filter]
     w106_df_filter = w106_process(w106_df_filter)
-    #_selected_col = ['wm_prod_code','prod_detail_type_code','prod_ccy','prod_risk_code','can_rcmd_ind']
-    #w106_df_filter = w106_df_filter[_selected_col]
+    _selected_col = ['wm_prod_code','can_rcmd_ind', 'invest_type','prod_risk_code', 'prod_detail_type_code', 'mkt_rbot_ctg_ic', 'counterparty_code', 'prod_ccy', 'high_yield_bond_ind']
+    #w106_df_filter = w106_df_filter[_selected_col[:f_num]]
 ## Create features
 user_fts, item_fts = None, None
 if args.user_ft:
@@ -125,6 +127,5 @@ else: # pass
     pass
 buy_old_user, buy_new_user, warm_start_user, cold_start_user = evaluation.purchase_statistic()
 
-print(f'Today: {today} Training-Span: {span} Warm-Start-Users: {warm_start_user} Cold-Start-Users: {cold_start_user} Mode: {eval_mode} Mean-Precision: {score} Upper-Bound: {upper_bound} \n')
-
+print(f'Today: {today} Training-Span: {span} Warm-Start-Users: {warm_start_user} Cold-Start-Users: {cold_start_user} Mode: {eval_mode} Mean-Precision: {score} Upper-Bound: {upper_bound} Used features: {_selected_col[:f_num]}\n')
 print("Done!") 

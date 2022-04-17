@@ -169,3 +169,9 @@ def load_cust(today, rawdata_conn=None, span=18, mode='train'):
     cust_df = cust_process(cust_df)
     return cust_df
 
+def fast_topK(sim, K):
+    """取相似度TopK的顧客"""
+    partial_sorting_sim = np.argpartition(-sim, K, 1)
+    col_index = np.arange(sim.shape[0])[:, None]
+    argsort_K = np.argsort(sim[col_index, partial_sorting_sim[:, 0:K]], 1)
+    return (partial_sorting_sim[:, 0:K][col_index, argsort_K]).tolist()
