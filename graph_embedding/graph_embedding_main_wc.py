@@ -5,6 +5,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from tqdm import tqdm
 from Graph_module.SMORe import SMORe 
 from Graph_module.TPR import TPR 
+from Graph_module.TPR_notext import TPR_notext 
 import argparse
 from evaluation import Evaluation
 from db_connection.utils import get_conn
@@ -20,7 +21,7 @@ parser.add_argument("--date", help="Recommendation date")
 parser.add_argument("--train_span", type=int, default=1, help="Training Period")
 parser.add_argument("--eval_duration", default='1m', type=str, help="one month or 7 days")
 parser.add_argument("--mode", default='bpr', type=str, help="choose algorithms")
-parser.add_argument("--model", default='tpr', type=str, help="choose tpr or smore")
+parser.add_argument("--model", default='tpr', type=str, help="choose tpr or smore or tpr_notext")
 parser.add_argument("--eval_mode", default='warm', type=str, help="choose warm or cold")
 parser.add_argument("--feature_number", type=int, default=9, help="number of selected features")
 args = parser.parse_args()
@@ -40,7 +41,7 @@ purchase_hist = w103_df.groupby("cust_no")["wm_prod_code"].apply(lambda x: list(
 ## Init SMORe
 if args.model == 'smore':
     model = SMORe(w103_df)
-else:
+elif args.model == 'tpr':
     w106_df = load_w106(rawdata_conn)
     _filter = w106_df.wm_prod_code.isin(w103_df['wm_prod_code'].tolist())
     w106_df_filter = w106_df[_filter]
@@ -51,6 +52,17 @@ else:
     print('selected features:', _selected_col[:f_num])
     
     model = TPR(w103_df, w106_df_filter)
+else:
+    w106_df = load_w106(rawdata_conn)
+    _filter = w106_df.wm_prod_code.isin(w103_df['wm_prod_code'].tolist())
+    w106_df_filter = w106_df[_filter]
+    w106_df_filter = w106_process(w106_df_filter)
+    # feature selection
+    _selected_col = ['wm_prod_code','can_rcmd_ind', 'invest_type','prod_risk_code', 'prod_detail_type_code', 'mkt_rbot_ctg_ic', 'counterparty_code', 'prod_ccy', 'high_yield_bond_ind']
+    w106_df_filter = w106_df_filter[_selected_col[:f_num]]
+    print('selected features:', _selected_col[:f_num])
+    
+    model = TPR_notext(w103_df, w106_df_filter)
 ## Get user & item emb.
 print("Training Model...")
 if args.model == 'smore':
