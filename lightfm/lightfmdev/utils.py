@@ -4,6 +4,24 @@ import datetime
 from tqdm import tqdm
 from collections import defaultdict
 
+def cust_process(df):
+    df = df.apply(lambda x:x.fillna(x.value_counts().index[0]))
+    df[df['children_cnt']>=4] = 4
+    # continuous value
+    df['age'] = pd.cut(df['age'], bins=[0, 18, 30, 50, 100], labels=False)
+    df['cust_vintage'] = pd.qcut(df['cust_vintage'], 4, labels=False, duplicates='drop')
+    return df
+
+def w106_process(df):
+    # discard categorization
+    discard_condition = {'counterparty_code': 100, 'mkt_rbot_ctg_ic': 200, 'prod_ccy': 500}
+    for col, n in discard_condition.items(): 
+        df.loc[df[col].value_counts()[df[col]].values<n, col] = col+'_other'
+    # convert int to categorical
+    df['high_yield_bond_ind'] = df['high_yield_bond_ind'].map({'Y': 'high_yield', 'N': 'not_high_yield'})
+    df['can_rcmd_ind'] = df['can_rcmd_ind'].map({1:'can_rcmd', 0: 'can_rcmd_N'})
+    return df
+
 def create_all_feature_pairs(features):
     """
     Create list containing all possible feature_name,feature_value pairs
@@ -48,11 +66,11 @@ def build_feature_tuples(features):
     return feature_tuples
 
 def top5_recommendation_user(model, interactions, user_id, user_dict, 
-                               item_dict,threshold = 0,nrec_items = 5, user_features, item_features):
+                               item_dict, user_features=None, item_features=None,threshold = 0,nrec_items = 5):
     
     n_users, n_items = interactions.shape
     user_x = user_dict[user_id]
-    scores = pd.Series(model.predict(user_x,np.arange(n_items), user_features, item_features))
+    scores = pd.Series(model.predict(user_x,np.arange(n_items), user_features=user_features, item_features=item_features))
     scores = list(pd.Series(scores.sort_values(ascending=False).index))
     
     #known_items = list(pd.Series(interactions.loc[user_id,:] \
