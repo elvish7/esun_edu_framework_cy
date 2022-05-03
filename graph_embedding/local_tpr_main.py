@@ -12,13 +12,18 @@ from local_evaluation import Evaluation
 parser = argparse.ArgumentParser()
 parser.add_argument("--date", default='2018-12-31', help="Recommendation date")
 parser.add_argument("--train_span", type=int, default=6, help="Training Period")
-parser.add_argument("--model", default='tpr', help="training data path")
-parser.add_argument("--train", help="training data path")
-parser.add_argument("--item_ft", default='', type=str, help="w106 item static feature data path")
-parser.add_argument("--user_ft", default='', type=str, help="cm_customer_m user static feature data path")
+parser.add_argument("--mode", default='bpr', type=str, help="choose algorithms")
+parser.add_argument("--model", default='tpr', type=str, help="choose tpr or smore or tpr_notext")
+# tpr tune
+parser.add_argument("--dim", type=int, default=128)
+parser.add_argument("--neg", type=int, default=5)
+parser.add_argument("--l", type=float, default=0.025)
+parser.add_argument("--t", type=int, default=100)
+
 args = parser.parse_args()
 date = args.date
 span = args.train_span
+algo = args.mode
 ## Get data path
 path = '/tmp2/cywu/raw_datasets/'+ date + '_' + str(span)
 train_path = path + '/train_w103.csv'
@@ -28,20 +33,29 @@ user_feature_path = path + '/user_features.csv'
 ## Read data
 w103_df = pd.read_csv(train_path)
 purchase_hist = w103_df.groupby("cust_no")["wm_prod_code"].apply(lambda x: list(set(x.values.tolist()))).to_dict()
-if args.model == 'tpr':
+if args.model != 'smore':
     w106_df = pd.read_csv(item_feature_path)
     _filter = w106_df.wm_prod_code.isin(w103_df['wm_prod_code'].tolist())
     w106_df_filter = w106_df[_filter]
-    _selected_col = ['wm_prod_code', 'prod_detail_type_code']#,'prod_ccy','prod_risk_code','can_rcmd_ind']
+    print(w106_df_filter.columns)
+    if args.model == 'tpr':
+        _selected_col = ['wm_prod_code', 'can_rcmd_ind', 'high_yield_bond_ind', 'counterparty_code', 
+                            'invest_type', 'mkt_rbot_ctg_ic', 'prod_ccy', 'prod_detail_type_code', 'prod_risk_code']
+    else:
+        _selected_col = ['wm_prod_code']
     w106_df_filter = w106_df_filter[_selected_col]
     #cm_customer_m_df = pd.read_csv(user_feature_path)
 ## Init SMORe
-if args.model == 'tpr':
-    model = TPR(w103_df, w106_df_filter)
-else:
+if args.model == 'smore':
     model = SMORe(w103_df)
+else:
+    model = TPR(w103_df, w106_df_filter)
+    
 ## Get user & item emb.
-user_emb, item_emb = model.fit(lr=0.05, update_times=2)
+if args.model == 'smore':
+    user_emb, item_emb = model.fit(mode=algo, lr=0.05, update_times=100)
+else: 
+    user_emb, item_emb = model.fit(d=args.dim, ns= args.neg, lr=args.l, update_times=args.t)
 ## Calculate cosine similarity of every (u, i) pair, n_user * n_item
 scores = cosine_similarity(user_emb.fillna(0), item_emb.fillna(0))
 ## Recommend 5 funds for every user
@@ -61,5 +75,5 @@ if eval_mode == 'warm':
 buy_old_user, buy_new_user, warm_start_user, cold_start_user = evaluation.purchase_statistic()
 
 # print(f'Today: {date} Training-Span: {span} Warm-Start-Users: {warm_start_user} Cold-Start-Users: {cold_start_user} Mode: {eval_mode} Mean-Precision: {score} Upper-Bound: {upper_bound} Used features: {_selected_col}\n')
-print(f'Today: {date} Training-Span: {span} Warm-Start-Users: {warm_start_user} Cold-Start-Users: {cold_start_user} Mode: {eval_mode} Mean-Precision: {score} Upper-Bound: {upper_bound}\n')
+print(f'Today: {date} Training-Span: {span} Warm-Start-Users: {warm_start_user} Cold-Start-Users: {cold_start_user} Mode: {eval_mode} Mean-Precision: {score} Upper-Bound: {upper_bound} params: {str(args.dim)+str(args.neg)+str(args.l)+str(args.t)}\n')
 print("Done!") 
