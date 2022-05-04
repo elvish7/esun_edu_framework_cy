@@ -6,13 +6,13 @@ from db_connection.utils import get_conn
 
 class Evaluation(ProcessBase):
     
-    def __init__(self, date, pred, duration, purchase_hist, mode='all'):
+    def __init__(self, date, pred, duration, purchase_hist, cust_ft=None, mode='all'):
         self.today = date
         self.duration = duration
         self.conn = get_conn('edu')
         self.pred = pred
         self.purchase_hist = purchase_hist
-        self.ans = self.answer(self.today, self.conn, self.duration)
+        self.ans = self.answer(self.today, self.conn, self.duration, cust_ft)
         self.mode = mode
 
     def show(self):
@@ -24,8 +24,9 @@ class Evaluation(ProcessBase):
         uncovered = len(set(self.ans.keys())) - covered
         return covered, uncovered
     
-    def answer(self, date, conn, duration):
+    def answer(self, date, conn, duration, cust_ft):
         df = self.read(date, conn, duration)
+        df = df[df['cust_no'].isin(cust_ft.cust_no)] # filter users with no features
         return df.groupby('cust_no')['wm_prod_code'].apply(list).to_dict()
 
     def read(self, date, conn, duration):

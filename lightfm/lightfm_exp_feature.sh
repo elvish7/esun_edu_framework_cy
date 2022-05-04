@@ -3,14 +3,27 @@ DIR=results
 len=1m
 
 # feature selection
-for fn in 4 5 6 7 8 9 #2 3 4 5 6 7 8 9
+
+#for fn in 6 7 8 9 #2 3 4 5 6 7 8 9
+#do
+#    for d in 2018-12-31 2019-01-31 2019-02-28 2019-03-31 2019-04-30 2019-05-31 2019-06-30
+#    do 
+#        for s in 18 6 
+#        do
+#            ### With User & Item Features
+#            python3 lightfm_main.py --date ${d} --train_span ${s} --eval_duration ${len} --dim 128 --epoch 10 --user_ft | grep 'Today' | awk -F' ' '{print $2,$4,$6,$8,$10,$12,$14}' >> #${DIR}/lightfm_userfeature_select_results${fn}.txt
+#        done
+#    done
+#done
+
+# item feature select
+for d in 2018-12-31 2019-01-31
 do
-    for d in 2018-12-31 2019-01-31 2019-02-28 2019-03-31 2019-04-30 2019-05-31 2019-06-30
-    do 
-        for s in 18 6 
+    for s in 18 6 
+    do
+        for i in 1 2 3 4 5 6 7 8 
         do
-            ### With User & Item Features
-            python3 lightfm_main.py --date ${d} --train_span ${s} --eval_duration ${len} --dim 128 --epoch 10 --user_ft | grep 'Today' | awk -F' ' '{print $2,$4,$6,$8,$10,$12,$14}' >> ${DIR}/lightfm_userfeature_select_results${fn}.txt
+            python3 lightfm_main.py --date ${d} --train_span ${s} --eval_duration ${len} --item_ft --feature_i ${i} | grep 'Today' | awk -F' ' '{print $2,$4,$6,$8,$10,$12,$14,$17}' >> ${DIR}/lightfm_itemft_sel.txt
         done
     done
 done

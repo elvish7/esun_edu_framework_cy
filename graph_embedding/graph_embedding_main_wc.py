@@ -9,7 +9,7 @@ from Graph_module.TPR_notext import TPR_notext
 import argparse
 from evaluation import Evaluation
 from db_connection.utils import get_conn
-from utils import load_w103, load_w106, w106_process 
+from utils import load_w103, load_w106, w106_process, load_cust 
 from mlaas_tools.config_build import config_set
 
 ## Configure env
@@ -36,50 +36,53 @@ rawdata_conn = get_conn('edu')
 ## Load data
 print("Loading Data...----")
 w103_df = load_w103(today, rawdata_conn, span)
+cm_customer_m_df = load_cust(today, rawdata_conn, span=span)
+w103_df = w103_df[w103_df['cust_no'].isin(cm_customer_m_df.cust_no)]
+
 purchase_hist = w103_df.groupby("cust_no")["wm_prod_code"].apply(lambda x: list(set(x.values.tolist()))).to_dict()
+
+## Init SMORe
+if args.model != 'smore':
+    w106_df = load_w106(rawdata_conn)
+    _filter = w106_df.wm_prod_code.isin(w103_df['wm_prod_code'].tolist())
+    w106_df_filter = w106_df[_filter]
+    w106_df_filter = w106_process(w106_df_filter)
+    # feature selection
+    _selected_col = ['wm_prod_code','can_rcmd_ind', 'invest_type','prod_risk_code', 'prod_detail_type_code', 'mkt_rbot_ctg_ic', 'counterparty_code', 'prod_ccy', 'high_yield_bond_ind']
+    w106_df_filter = w106_df_filter[_selected_col[:f_num]]
+    print('selected features:', _selected_col[:f_num])
+    if args.model == 'tpr':
+        _selected_col = ['wm_prod_code', 'can_rcmd_ind', 'high_yield_bond_ind', 'counterparty_code', 
+                            'invest_type', 'mkt_rbot_ctg_ic', 'prod_ccy', 'prod_detail_type_code', 'prod_risk_code']
+        _selected_col = _selected_col[:f_num]
+        print('selected features:', _selected_col)
+    else:
+        _selected_col = ['wm_prod_code']
+    w106_df_filter = w106_df_filter[_selected_col]
 
 ## Init SMORe
 if args.model == 'smore':
     model = SMORe(w103_df)
-elif args.model == 'tpr':
-    w106_df = load_w106(rawdata_conn)
-    _filter = w106_df.wm_prod_code.isin(w103_df['wm_prod_code'].tolist())
-    w106_df_filter = w106_df[_filter]
-    w106_df_filter = w106_process(w106_df_filter)
-    # feature selection
-    _selected_col = ['wm_prod_code','can_rcmd_ind', 'invest_type','prod_risk_code', 'prod_detail_type_code', 'mkt_rbot_ctg_ic', 'counterparty_code', 'prod_ccy', 'high_yield_bond_ind']
-    w106_df_filter = w106_df_filter[_selected_col[:f_num]]
-    print('selected features:', _selected_col[:f_num])
-    
-    model = TPR(w103_df, w106_df_filter)
 else:
-    w106_df = load_w106(rawdata_conn)
-    _filter = w106_df.wm_prod_code.isin(w103_df['wm_prod_code'].tolist())
-    w106_df_filter = w106_df[_filter]
-    w106_df_filter = w106_process(w106_df_filter)
-    # feature selection
-    _selected_col = ['wm_prod_code','can_rcmd_ind', 'invest_type','prod_risk_code', 'prod_detail_type_code', 'mkt_rbot_ctg_ic', 'counterparty_code', 'prod_ccy', 'high_yield_bond_ind']
-    w106_df_filter = w106_df_filter[_selected_col[:f_num]]
-    print('selected features:', _selected_col[:f_num])
-    
-    model = TPR_notext(w103_df, w106_df_filter)
+    model = TPR(w103_df, w106_df_filter)
+        
 ## Get user & item emb.
 print("Training Model...")
 if args.model == 'smore':
     user_emb, item_emb = model.fit(mode=algo, lr=0.05, update_times=100)
 else: 
-    user_emb, item_emb = model.fit(lr=0.05, update_times=100)
+    user_emb, item_emb = model.fit(d=256, ns=2, lr=0.1, update_times=10)
 ## Calculate cosine similarity of every (u, i) pair, n_user * n_item
 print("Predicting...")
 scores = cosine_similarity(user_emb.fillna(0), item_emb.fillna(0))
 ## Recommend 5 funds for every user
 id2user, prediction = model.user_dict, collections.defaultdict(list)
 for i, score in enumerate(tqdm(scores, total=len(scores))):
-   user = id2user[i] 
-   prediction[user] = [i[1] for i in sorted(zip(score, model.items), reverse=True )][:5]
+    user = id2user[i] 
+    prediction[user] = [i[1] for i in sorted(zip(score, model.items), reverse=True )][:5]
 ## Evaluate results
 print("Evaluating Results...")
-evaluation = Evaluation(today, prediction, duration, purchase_hist)
+evaluation = Evaluation(today, prediction, duration, purchase_hist, cm_customer_m_df)
 warm_user, cold_user = evaluation.warm_cold_list()
 if eval_mode == 'warm':
     warm_pred = {k: v for k, v in prediction.items() if k in warm_user}

@@ -23,6 +23,7 @@ parser.add_argument("--user_ft", help="Use user features", action='store_true')
 parser.add_argument("--item_ft", help="Use item features", action='store_true')
 parser.add_argument("--eval_mode", default='warm', type=str, help="choose warm or cold")
 parser.add_argument("--feature_number", type=int, default=9, help="number of selected features")
+parser.add_argument("--feature_i", default=1, type=int, help="selected feature")
 args = parser.parse_args()
 today = args.date
 span = args.train_span
@@ -37,26 +38,21 @@ rawdata_conn = get_conn('edu')
 ## Load data
 print("Loading Data...")
 w103_df = load_w103(today, rawdata_conn, span)
-purchase_hist = w103_df.groupby("cust_no")["wm_prod_code"].apply(lambda x: list(set(x.values.tolist()))).to_dict()
+cm_customer_m_df = load_cust(today, rawdata_conn, span=span)
+w103_df = w103_df[w103_df['cust_no'].isin(cm_customer_m_df.cust_no)]
+
 if args.user_ft:
-    cm_customer_m_df = load_cust(today, rawdata_conn, span=span)
-    cm_customer_m_df = cust_process(cm_customer_m_df)
-if args.item_ft:
-    w106_df = load_w106(rawdata_conn)
-## Intersection of w103 & cm_customer_m wrt cust_no
-if args.user_ft:
-    user_filter = set(w103_df['cust_no'].tolist()) & set(cm_customer_m_df['cust_no'].tolist())
-    w103_df = w103_df[w103_df['cust_no'].isin(user_filter)]
-    cust_df_filter = cm_customer_m_df[cm_customer_m_df['cust_no'].isin(user_filter)]
+    _filter = cm_customer_m_df.cust_no.isin(w103_df['cust_no'].tolist())
+    cust_df_filter = cm_customer_m_df[_filter]
     _selected_col = ['cust_no', 'age', 'gender_code', 'cust_vintage', 'income_range_code', 'risk_type_code', 'children_cnt', 'edu_code', 'wm_club_class_code']
     cust_df_filter = cust_df_filter[_selected_col[:f_num]]
-## Intersection of w103 & w106 wrt wm_prod_code
+    
 if args.item_ft:
+    w106_df = load_w106(rawdata_conn)
     _filter = w106_df.wm_prod_code.isin(w103_df['wm_prod_code'].tolist())
     w106_df_filter = w106_df[_filter]
-    w106_df_filter = w106_process(w106_df_filter)
     _selected_col = ['wm_prod_code','can_rcmd_ind', 'invest_type','prod_risk_code', 'prod_detail_type_code', 'mkt_rbot_ctg_ic', 'counterparty_code', 'prod_ccy', 'high_yield_bond_ind']
-    #w106_df_filter = w106_df_filter[_selected_col[:f_num]]
+    w106_df_filter = w106_df_filter[['wm_prod_code', _selected_col[args.feature_i]]]
 ## Create features
 user_fts, item_fts = None, None
 if args.user_ft:
@@ -64,6 +60,7 @@ if args.user_ft:
 if args.item_ft:
     item_fts = create_all_feature_pairs(w106_df_filter)
 
+purchase_hist = w103_df.groupby("cust_no")["wm_prod_code"].apply(lambda x: list(set(x.values.tolist()))).to_dict()
 ## Fit dataset
 #dataset1 = Dataset(False,False)
 dataset1 = Dataset()
@@ -118,7 +115,7 @@ pred = recommendation_all(model, interactions, user_list, user_id_map, item_id_m
 
 ## Evaluate results
 print("Evaluating Results...")
-evaluation = Evaluation(today, pred, duration, purchase_hist)
+evaluation = Evaluation(today, pred, duration, purchase_hist, cm_customer_m_df)
 warm_user, cold_user = evaluation.warm_cold_list()
 if eval_mode == 'warm':
     warm_pred = {k: v for k, v in pred.items() if k in warm_user}
@@ -127,5 +124,8 @@ else: # pass
     pass
 buy_old_user, buy_new_user, warm_start_user, cold_start_user = evaluation.purchase_statistic()
 
-print(f'Today: {today} Training-Span: {span} Warm-Start-Users: {warm_start_user} Cold-Start-Users: {cold_start_user} Mode: {eval_mode} Mean-Precision: {score} Upper-Bound: {upper_bound} Used features: {_selected_col[:f_num]}\n')
+if args.user_ft or args.item_ft:
+    print(f'Today: {today} Training-Span: {span} Warm-Start-Users: {warm_start_user} Cold-Start-Users: {cold_start_user} Mode: {eval_mode} Mean-Precision: {score} Upper-Bound: {upper_bound} Used features: {_selected_col[args.feature_i]}\n')
+else:
+    print(f'Today: {today} Training-Span: {span} Warm-Start-Users: {warm_start_user} Cold-Start-Users: {cold_start_user} Mode: {eval_mode} Mean-Precision: {score} Upper-Bound: {upper_bound}\n')
 print("Done!") 
