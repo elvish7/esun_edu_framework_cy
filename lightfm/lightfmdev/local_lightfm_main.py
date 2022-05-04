@@ -32,6 +32,7 @@ if args.user_ft:
 ## Read data
 w103_df = pd.read_csv(train_path)
 purchase_hist = w103_df.groupby("cust_no")["wm_prod_code"].apply(lambda x: list(set(x.values.tolist()))).to_dict()
+
 if args.item_ft:
     w106_df = pd.read_csv(item_feature_path)
     w106_df = w106_process(w106_df)
@@ -50,6 +51,13 @@ if args.user_ft:
     cust_df_filter = cm_customer_m_df[_filter]
     _selected_col = ['cust_no', 'age', 'gender_code', 'cust_vintage', 'income_range_code', 'risk_type_code', 'children_cnt', 'edu_code', 'wm_club_class_code']
     cust_df_selected = cust_df_filter[_selected_col].groupby('cust_no').tail(1)
+
+# construct a useful feature
+eva_df = pd.read_csv(evaluation_path)
+eva_ans = eva_df[['cust_no', 'wm_prod_code']].groupby('cust_no').first()
+fake_ft = cust_df_selected[['cust_no']].merge(eva_ans, how='left', on='cust_no').fillna(0)
+cust_df_selected = fake_ft
+
 ## Create features
 user_fts, item_fts = None, None
 if args.user_ft:
@@ -93,6 +101,7 @@ pred = recommendation_all(model, interactions, user_list, user_id_map, item_id_m
 print("Evaluating Results...")
 eva_df = pd.read_csv(evaluation_path)
 evaluation = Evaluation(date, pred, purchase_hist, eva_df)
+print(evaluation.ans)
 warm_user, cold_user = evaluation.warm_cold_list()
 eval_mode = 'warm'
 if eval_mode == 'warm':
