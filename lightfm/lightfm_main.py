@@ -39,13 +39,16 @@ rawdata_conn = get_conn('edu')
 print("Loading Data...")
 w103_df = load_w103(today, rawdata_conn, span)
 cm_customer_m_df = load_cust(today, rawdata_conn, span=span)
-w103_df = w103_df[w103_df['cust_no'].isin(cm_customer_m_df.cust_no)]
 
 if args.user_ft:
     _filter = cm_customer_m_df.cust_no.isin(w103_df['cust_no'].tolist())
     cust_df_filter = cm_customer_m_df[_filter]
     _selected_col = ['cust_no', 'age', 'gender_code', 'cust_vintage', 'income_range_code', 'risk_type_code', 'children_cnt', 'edu_code', 'wm_club_class_code']
     cust_df_filter = cust_df_filter[_selected_col[:f_num]]
+    print('Train users with features:', len(cust_df_filter))
+    print(w103_df[~w103_df['cust_no'].isin(cm_customer_m_df.cust_no)])
+    test_u = (w103_df[~w103_df['cust_no'].isin(cm_customer_m_df.cust_no)]['cust_no'].iloc[0])
+    print(test_u)
     
 if args.item_ft:
     w106_df = load_w106(rawdata_conn)
@@ -106,6 +109,7 @@ model.fit(interactions, # spase matrix representing whether user u and item i in
 print("Predicting...")
 user_list = w103_df['cust_no'].unique().tolist()
 pred = recommendation_all(model, interactions, user_list, user_id_map, item_id_map, user_features, item_features)
+print('prediction', len(pred))
 ## Evaluate results
 # print("Evaluating Results...")
 # evaluation = Evaluation(today, pred, duration)
@@ -115,7 +119,7 @@ pred = recommendation_all(model, interactions, user_list, user_id_map, item_id_m
 
 ## Evaluate results
 print("Evaluating Results...")
-evaluation = Evaluation(today, pred, duration, purchase_hist, cm_customer_m_df)
+evaluation = Evaluation(today, pred, duration, purchase_hist)
 warm_user, cold_user = evaluation.warm_cold_list()
 if eval_mode == 'warm':
     warm_pred = {k: v for k, v in pred.items() if k in warm_user}
